@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * A subset of Stylus tokens, light only.
+ *
+ * Values come from the `Stylus subset` collection in the Figma, so a variable
+ * named `Background/Surface/Dim` there is `--bg-surface-dim` here. Work from
+ * these rather than from hex: `tailwind.config.ts` exposes semantic utilities
+ * only, so a raw colour won't compile.
+ *
+ * A few tokens below are marked "not in the Figma". They're real Stylus
+ * tokens that this particular design doesn't exercise, kept because the
+ * components in `src/ui/` use them.
+ */
+@layer base {
+  :root {
+    /* Text */
+    --text-default: #222425;
+    --text-dim: #565a5e;
+    --text-info: #1d4c6d;
+    --text-on-element: rgb(255 255 255 / 0.95);
+    --text-placeholder: #8b8f93; /* not in the Figma */
+
+    /* Borders */
+    --border-default: #e6e9ec;
+    --border-focus: rgb(80 152 193 / 0.67);
+    --border-dim: #f0f2f4; /* not in the Figma */
+    --border-emphasis: #ccd1d6; /* not in the Figma */
+
+    /* Surfaces */
+    --bg-surface-default: #ffffff;
+    --bg-surface-dim: #f9fafc;
+    --bg-surface-neutral: rgb(20 22 23 / 0.05);
+    --bg-surface-info: rgb(80 152 193 / 0.23);
+
+    /* Accents */
+    --accent-1: #5098c1;
+
+    /* Elements. `-lighter` is the hover shade and is not in the Figma. */
+    --bg-element-primary: #000000;
+    --bg-element-primary-lighter: #383b3f;
+
+    /* Elevation */
+    --shadow-base: 0 1px 2px -1px rgb(15 23 42 / 0.1), 0 1px 3px 0 rgb(15 23 42 / 0.1);
+    --shadow-inner: inset 0 2px 4px 0 rgb(15 23 42 / 0.05);
+
+    /* Radius. Only `--radius-md` is in the Figma (`Border radius/rounded-md`). */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+
+    /* Motion. Not in the Figma — the written spec covers it. */
+    --duration-fast: 120ms;
+    --duration-base: 200ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-entrance: cubic-bezier(0, 0, 0, 1);
+  }
+
+  html {
+    color-scheme: light;
+  }
+  body {
+    background: var(--bg-surface-dim);
+    color: var(--text-default);
+    font-family: 'Public Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}

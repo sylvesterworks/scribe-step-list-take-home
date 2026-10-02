@@ -1,0 +1,44 @@
+import { forwardRef } from 'react';
+
+import { cn } from '../lib/cn';
+
+type Variant = 'primary' | 'secondary' | 'ghost';
+type Size = 'small' | 'default';
+
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: Variant;
+  size?: Size;
+};
+
+const VARIANTS: Record<Variant, string> = {
+  primary: 'bg-element-primary border border-default text-on-element hover:bg-element-primary-lighter',
+  secondary: 'bg-transparent text-default border border-default hover:border-emphasis',
+  ghost: 'bg-transparent text-default hover:bg-surface-neutral',
+};
+
+const SIZES: Record<Size, string> = {
+  small: 'rounded-md px-2.5 h-7 text-xs gap-1.5',
+  default: 'rounded-md px-3 h-8 text-sm gap-1.5',
+};
+
+/**
+ * Trimmed version of the Stylus Button. Same shape, same focus treatment.
+ */
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = 'secondary', size = 'default', className, type = 'button', ...props }, ref) => (
+    <button
+      ref={ref}
+      type={type}
+      className={cn(
+        'inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap font-semibold',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus',
+        'disabled:opacity-50',
+        VARIANTS[variant],
+        SIZES[size],
+        className,
+      )}
+      {...props}
+    />
+  ),
+);
+Button.displayName = 'Button';
