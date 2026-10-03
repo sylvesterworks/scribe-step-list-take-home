@@ -1,14 +1,24 @@
 import { useState } from 'react';
 
-import { Breadcrumbs } from './components/Breadcrumbs';
+import { Breadcrumbs, type Crumb } from './components/Breadcrumbs';
 import { NavigationTop } from './components/NavigationTop';
 import { PageLayout } from './components/PageLayout';
 import { StepList } from './components/StepList';
 import { StepCard } from './components/StepCard';
 import { EditModeContext } from './lib/editMode';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+
 import { Button } from './ui/Button';
+import { IconLink } from './ui/IconLink';
 
 import { steps as initialSteps, type Step } from './data/steps';
+
+// The last crumb is the current page, so it has no url.
+const BREADCRUMB_ITEMS: Crumb[] = [
+  { title: 'Josh Sylvester', url: '#' },
+  { title: 'Scribe Interview', url: '#' },
+  { title: 'How to invite a team member' },
+];
 
 export default function App() {
   // `savedSteps` is the committed list. While editing, changes go to
@@ -50,7 +60,16 @@ export default function App() {
   return (
     <EditModeContext.Provider value={isEditing}>
       <NavigationTop
-        left={<Breadcrumbs items={[]} />}
+        left={
+          <div className="flex items-center gap-2">
+            <IconLink
+              href="https://scribehow.notion.site/Lead-Design-Engineer-take-home-exercise-3dd901189afa815794a9e692cb6a9ee1"
+              icon={faArrowLeft}
+              label="Back to the exercise brief"
+            />
+            <Breadcrumbs items={BREADCRUMB_ITEMS} />
+          </div>
+        }
         right={
           // One element whose label and variant change, rather than two
           // different buttons, so keyboard focus stays on it after a click.
@@ -63,8 +82,8 @@ export default function App() {
         }
       />
       <PageLayout>
-        <h1>How to invite a team member</h1>
-        <p>{steps.length} steps</p>
+        <h1 className="text-2xl font-bold leading-8">How to invite a team member</h1>
+        <p className="text-base font-normal leading-6">{steps.length} {steps.length === 1 ? 'step' : 'steps'}</p>
 
         <StepList>
           {steps.map((step, i) => (

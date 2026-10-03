@@ -1,39 +1,40 @@
 import { forwardRef } from 'react';
+import { faAngleRight } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
-import { cn } from '../lib/cn';
-
-type Crumb = {
+export type Crumb = {
   title: string;
   url?: string;
 };
 
-export type BreadcrumbsProps = React.HTMLAttributes<HTMLSpanElement> & {
-  items: Crumb[]
+export type BreadcrumbsProps = React.HTMLAttributes<HTMLElement> & {
+  items: Crumb[];
 };
 
 /**
- * The page's location trail. Crumbs with a `url` render as links.
+ * The page's location trail: Link > Link > Current page. A crumb with a `url`
+ * is a link; a crumb without one is the current page and renders bold.
  */
-export const Breadcrumbs = forwardRef<HTMLSpanElement, BreadcrumbsProps>(
+export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(
   ({ items, className, ...props }, ref) => (
-    <span
-      ref={ref}
-      className={cn(
-        'gap-[--p2]',
-        className,
-      )}
-      {...props}
-    >
-      {items.map((item) =>
-        item.url ? (
-          <a key={item.title} href={item.url}>
-            {item.title}
-          </a>
-        ) : (
-          <span key={item.title}>{item.title}</span>
-        ),
-      )}
-    </span>
+    <nav ref={ref} aria-label="Breadcrumb" className={className} {...props}>
+      {/* role="list" for the same Safari reason as StepList. */}
+      <ol role="list" className="flex items-center gap-2">
+        {items.map((item, i) => (
+          <li key={item.title} className="flex items-center gap-2">
+            {/* The separator is decorative: FontAwesomeIcon sets aria-hidden. */}
+            {i > 0 && <FontAwesomeIcon icon={faAngleRight} className="text-dim" />}
+            {item.url ? (
+              <a href={item.url}>{item.title}</a>
+            ) : (
+              <span aria-current="page" className="font-bold">
+                {item.title}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
   ),
 );
 Breadcrumbs.displayName = 'Breadcrumbs';
