@@ -63,6 +63,9 @@ export default {
         xl: 'var(--radius-xl)',
         '4xl': '2rem',
       },
+      maxWidth: {
+        content: 'var(--width-content)',
+      },
       transitionTimingFunction: {
         standard: 'var(--ease-standard)',
         entrance: 'var(--ease-entrance)',

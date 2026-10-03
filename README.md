@@ -34,3 +34,7 @@ src/
 - Adding a dependency is fine.
 
 Your task is in the brief you were sent, not in this file.
+
+## Tokens added
+
+- `--width-content: 720px` (Tailwind: `max-w-content`). The width of the page's content column in the Figma. Tailwind's nearest step is `max-w-3xl` (768px), so matching the design would otherwise mean a hard-coded `max-w-[720px]`. A raw value like that can drift from the design without anyone noticing. As a token, the column width has a name, lives in one place, and every page that uses it changes together.

@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import { Breadcrumbs } from './components/Breadcrumbs';
 import { NavigationTop } from './components/NavigationTop';
+import { PageLayout } from './components/PageLayout';
+import { StepList } from './components/StepList';
 import { StepCard } from './components/StepCard';
 import { EditModeContext } from './lib/editMode';
 import { Button } from './ui/Button';
@@ -60,21 +62,24 @@ export default function App() {
           </Button>
         }
       />
-      <div className="">
+      <PageLayout>
         <h1>How to invite a team member</h1>
         <p>{steps.length} steps</p>
 
-        {steps.map((step, i) => (
-          <StepCard
-            key={step.id}
-            step={step}
-            index={i}
-            onOpen={openStep}
-            onRename={renameStep}
-            onDelete={deleteStep}
-          />
-        ))}
-      </div>
+        <StepList>
+          {steps.map((step, i) => (
+            <li key={step.id}>
+              <StepCard
+                step={step}
+                index={i}
+                onOpen={openStep}
+                onRename={renameStep}
+                onDelete={deleteStep}
+              />
+            </li>
+          ))}
+        </StepList>
+      </PageLayout>
     </EditModeContext.Provider>
   );
 }

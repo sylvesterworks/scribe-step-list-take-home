@@ -53,6 +53,9 @@
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
 
+    /* Layout. Added for this exercise, see README. Not a Figma variable. */
+    --width-content: 720px;
+
     /* Motion. Not in the Figma — the written spec covers it. */
     --duration-fast: 120ms;
     --duration-base: 200ms;
