@@ -26,9 +26,11 @@ export function StepCard({ step, index, onOpen, onRename, onDelete }: Props) {
   return (
     <Card onClick={() => onOpen(step.id)}>
       {isEditing && <Button onClick={(e) => e.stopPropagation()}>drag</Button>}
-      <StepNumber>{index + 1}</StepNumber>
       <div>
-        <p>{step.title}</p>
+        <div className="flex items-center gap-3">
+          <StepNumber>{index + 1}</StepNumber>
+          <h2>{step.title}</h2>
+        </div>
         <p>{step.description}</p>
       </div>
       {isEditing && (
