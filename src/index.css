@@ -28,6 +28,7 @@
     --border-focus: rgb(80 152 193 / 0.67);
     --border-dim: #f0f2f4; /* not in the Figma */
     --border-emphasis: #ccd1d6; /* not in the Figma */
+    --border-info: #5098c1; /* not in the Figma */
 
     /* Surfaces */
     --bg-surface-default: #ffffff;

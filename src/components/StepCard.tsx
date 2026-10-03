@@ -1,6 +1,7 @@
 import { useContext } from 'react';
 
 import { EditModeContext } from '../lib/editMode';
+import { linkify } from '../lib/linkify';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { Screenshot } from '../ui/Screenshot';
@@ -24,14 +25,20 @@ export function StepCard({ step, index, onOpen, onRename, onDelete }: Props) {
   const isEditing = useContext(EditModeContext);
 
   return (
-    <Card onClick={() => onOpen(step.id)}>
+    <Card
+      onClick={(e) => {
+        // A click on a link in the text follows the link, not the card.
+        if ((e.target as HTMLElement).closest('a')) return;
+        onOpen(step.id);
+      }}
+    >
       {isEditing && <Button onClick={(e) => e.stopPropagation()}>drag</Button>}
       <div>
         <div className="flex items-center gap-3">
           <StepNumber>{index + 1}</StepNumber>
-          <h2>{step.title}</h2>
+          <h2>{linkify(step.title, 'heading')}</h2>
         </div>
-        <p>{step.description}</p>
+        <p>{linkify(step.description, 'body')}</p>
       </div>
       {isEditing && (
         <>
