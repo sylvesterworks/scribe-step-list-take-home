@@ -8,7 +8,7 @@ type Props = {
  */
 export function PageHeading({ heading, description }: Props) {
   return (
-    <div>
+    <div className="p-2">
       <h1 className="text-2xl font-bold leading-8">{heading}</h1>
       <p className="text-base font-normal leading-6">{description}</p>
     </div>
