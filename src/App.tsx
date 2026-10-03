@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Breadcrumbs, type Crumb } from './components/Breadcrumbs';
+import { PageHeading } from './components/PageHeading';
 import { NavigationTop } from './components/NavigationTop';
 import { PageLayout } from './components/PageLayout';
 import { StepList } from './components/StepList';
@@ -82,8 +83,10 @@ export default function App() {
         }
       />
       <PageLayout>
-        <h1 className="text-2xl font-bold leading-8">How to invite a team member</h1>
-        <p className="text-base font-normal leading-6">{steps.length} {steps.length === 1 ? 'step' : 'steps'}</p>
+        <PageHeading
+          heading="How to invite a team member"
+          description={`${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`}
+        />
 
         <StepList>
           {steps.map((step, i) => (

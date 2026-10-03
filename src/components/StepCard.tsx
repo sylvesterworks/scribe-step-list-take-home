@@ -38,7 +38,7 @@ export function StepCard({ step, index, onOpen, onRename, onDelete }: Props) {
           <StepNumber>{index + 1}</StepNumber>
           <h2>{linkify(step.title, 'heading')}</h2>
         </div>
-        <p>{linkify(step.description, 'body')}</p>
+        <p className="py-2">{linkify(step.description, 'body')}</p>
       </div>
       {isEditing && (
         <>

@@ -40,6 +40,10 @@ Your task is in the brief you were sent, not in this file.
 - `--width-content: 720px` (Tailwind: `max-w-content`). The width of the page's content column in the Figma. Tailwind's nearest step is `max-w-3xl` (768px), so matching the design would otherwise mean a hard-coded `max-w-[720px]`. A raw value like that can drift from the design without anyone noticing. As a token, the column width has a name, lives in one place, and every page that uses it changes together.
 - `--border-info: #5098c1`, the stroke of the `Link` badge. The info family already had `--text-info` and `--bg-surface-info` but no border. The closest existing color was `--border-focus`, but using the focus-ring token for decoration ties the two together: retune the focus ring (it currently fails 3:1 contrast) and every badge changes with it. The value is the same as `--accent-1`.
 
+## Where we went beyond the Figma
+
+- **Step description.** The Figma's card has no description text, but every fixture step has one, so we render it under the title. Its spacing is our call: 8px above and below (`py-2`) separates it from the title row and keeps it off the screenshot.
+
 ## Components added to `ui/`
 
 `src/ui/` is the design system (Stylus) layer. The components below weren't in the starter, and we added them there on the assumption that they belong in Stylus, not in the editor:
