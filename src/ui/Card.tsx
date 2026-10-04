@@ -18,7 +18,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(({ type, className, ..
   <div
     ref={ref}
     className={cn(
-      'rounded-xl border border-default bg-surface-default px-6 py-5',
+      'rounded-xl border border-default bg-surface-default p-4',
       type === 'linked' && 'cursor-pointer hover:border-emphasis focus-visible:border-emphasis',
       className,
     )}

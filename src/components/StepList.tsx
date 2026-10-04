@@ -11,6 +11,7 @@ export type StepListProps = React.OlHTMLAttributes<HTMLOListElement>;
 export const StepList = forwardRef<HTMLOListElement, StepListProps>(
   ({ className, ...props }, ref) => (
     <ol
+      data-id="step-list"
       ref={ref}
       // Tailwind's preflight sets `list-style: none`, and Safari/VoiceOver
       // then drops the list semantics. `role="list"` puts them back.

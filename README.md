@@ -43,6 +43,11 @@ Your task is in the brief you were sent, not in this file.
 ## Where we went beyond the Figma
 
 - **Step description.** The Figma's card has no description text, but every fixture step has one, so we render it under the title. Its spacing is our call: 8px above and below (`py-2`) separates it from the title row and keeps it off the screenshot.
+- **Page side padding is 60px, not 48px.** In edit mode the drag handle sits outside the card, centered in a 60×72 box so that it lines up with the step number. The design's 48px side padding doesn't leave room for that box, so on narrow windows the handle would overflow off the page. The page's left and right padding is 60px so the handle always fits. Top and bottom stay at 48px. The design doesn't cover this case.
+
+## Known differences from the Figma
+
+- **The drag handle sits 1px higher than the step number.** The cause is how borders are measured. In Figma, a card's stroke is drawn inside the frame and takes up no layout space. In CSS, `Card`'s 1px `border` does take space, so everything inside the card moves down 1px compared with the design. This is a common gap between Figma and production code. The header already avoids it by using an inset shadow in place of a border. We haven't changed `Card` yet, because its hover, selected and drag states will probably change how it draws its edge, so we'll fix this when we build those states.
 
 ## Components added to `ui/`
 
@@ -52,3 +57,4 @@ Your task is in the brief you were sent, not in this file.
 - `IconLink`: an `<a>` that looks like an `IconButton`, for navigation. `label` is required.
 - `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
 - `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.
+- `Card` padding changed from `px-6 py-5` to `p-4` to match the Figma. Overriding it from `StepCard` with `className` doesn't work: the starter's `cn` doesn't merge conflicting classes, and Tailwind outputs `.p-4` before `.px-6`/`.py-5`, so the base padding always wins.
