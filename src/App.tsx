@@ -1,4 +1,21 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type DragEndEvent,
+  type UniqueIdentifier,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 import { Breadcrumbs, type Crumb } from './ui/Breadcrumbs';
 import { PageHeading } from './components/PageHeading';
@@ -27,6 +44,9 @@ export default function App() {
   const [savedSteps, setSavedSteps] = useState<Step[]>(initialSteps);
   const [draftSteps, setDraftSteps] = useState<Step[]>(initialSteps);
   const [isEditing, setIsEditing] = useState(false);
+  // One step can be selected at a time, in edit mode only; clicking a card
+  // selects it, and "Done editing" clears it.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -37,14 +57,10 @@ export default function App() {
 
   function finishEditing() {
     setSavedSteps(draftSteps);
+    setSelectedId(null);
     setIsEditing(false);
   }
 
-  function openStep(id: string) {
-    const step = steps.find((s) => s.id === id);
-    // Stands in for navigating to the step detail page.
-    window.alert(`Open step: ${step?.title}`);
-  }
 
   function renameStep(id: string) {
     const step = steps.find((s) => s.id === id);
@@ -57,6 +73,58 @@ export default function App() {
   function deleteStep(id: string) {
     setDraftSteps((prev) => prev.filter((s) => s.id !== id));
   }
+
+  // Pointer covers mouse, pen and touch. Keyboard: Space/Enter to pick up,
+  // arrows to move, Space/Enter to drop, Escape to cancel.
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return;
+    setDraftSteps((prev) => {
+      const from = prev.findIndex((s) => s.id === active.id);
+      const to = prev.findIndex((s) => s.id === over.id);
+      return arrayMove(prev, from, to);
+    });
+  }
+
+  // What screen readers hear while reordering. dnd-kit's defaults read out
+  // raw ids ("step-3"), so these use the title and position instead.
+  // The list only changes on drop, so during a drag `position(active.id)` is
+  // still where the step started and `position(over.id)` is where it would land.
+  function titleOf(id: UniqueIdentifier) {
+    return steps.find((s) => s.id === id)?.title ?? 'Step';
+  }
+  function position(id: UniqueIdentifier) {
+    return steps.findIndex((s) => s.id === id) + 1;
+  }
+  // dnd-kit fires onDragOver right after onDragStart (the step starts out over
+  // its own position), which would replace "Picked up" with "moved to" before
+  // anything moved. So onDragOver only speaks when the position changes.
+  const lastAnnouncedOver = useRef<UniqueIdentifier | null>(null);
+
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => {
+      lastAnnouncedOver.current = active.id;
+      return `Picked up ${titleOf(active.id)}, position ${position(active.id)} of ${steps.length}.`;
+    },
+    onDragOver: ({ active, over }) => {
+      const overId = over?.id ?? null;
+      if (overId === lastAnnouncedOver.current) return undefined;
+      lastAnnouncedOver.current = overId;
+      return over
+        ? `${titleOf(active.id)} moved to position ${position(over.id)} of ${steps.length}.`
+        : `${titleOf(active.id)} is not over a position.`;
+    },
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `${titleOf(active.id)} dropped at position ${position(over.id)} of ${steps.length}.`
+        : `${titleOf(active.id)} dropped. Order unchanged.`,
+    onDragCancel: ({ active }) =>
+      `Move cancelled. ${titleOf(active.id)} is back at position ${position(active.id)} of ${steps.length}.`,
+  };
 
   return (
     <EditModeContext.Provider value={isEditing}>
@@ -88,19 +156,29 @@ export default function App() {
           description={`${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`}
         />
 
-        <StepList>
-          {steps.map((step, i) => (
-            <li key={step.id}>
-              <StepCard
-                step={step}
-                index={i}
-                onOpen={openStep}
-                onRename={renameStep}
-                onDelete={deleteStep}
-              />
-            </li>
-          ))}
-        </StepList>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          accessibility={{ announcements }}
+        >
+          <SortableContext items={steps} strategy={verticalListSortingStrategy}>
+            <StepList>
+              {steps.map((step, i) => (
+                <li key={step.id}>
+                  <StepCard
+                    step={step}
+                    index={i}
+                    isSelected={step.id === selectedId}
+                    onSelect={setSelectedId}
+                    onRename={renameStep}
+                    onDelete={deleteStep}
+                  />
+                </li>
+              ))}
+            </StepList>
+          </SortableContext>
+        </DndContext>
       </PageLayout>
     </EditModeContext.Provider>
   );

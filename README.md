@@ -45,6 +45,13 @@ Your task is in the brief you were sent, not in this file.
 - **Step description.** The Figma's card has no description text, but every fixture step has one, so we render it under the title. Its spacing is our call: 8px above and below (`py-2`) separates it from the title row and keeps it off the screenshot.
 - **Page side padding is 60px, not 48px.** In edit mode the drag handle sits outside the card, centered in a 60×72 box so that it lines up with the step number. The design's 48px side padding doesn't leave room for that box, so on narrow windows the handle would overflow off the page. The page's left and right padding is 60px so the handle always fits. Top and bottom stay at 48px. The design doesn't cover this case.
 
+## Design questions for the design team
+
+These are places where we think the design is wrong rather than just silent. We'd take them back to the designers before going further.
+
+- **The focus frame leaves out the drag handle.** Every other edit-state frame shows the handle, but the focus frame doesn't. In our build, a card can only be focused or selected in edit mode, because view mode is read-only and nothing in it can be selected. In edit mode the handle is always there, so a focused card without one isn't a state that can happen. We read the frame as a mistake in the design. Following the prompt's rule, we built "focus shows the same controls as hover" rather than copying the frame.
+- **The edit controls only appear on hover.** In the design, the drag handle and the other controls appear when you hover a card. Hiding controls until hover is inaccessible: keyboard, screen reader and touch users never hover, so they can't find controls that only appear on hover. Hover also doesn't exist in view mode, where cards are read-only. We chose to show the drag, rename and delete controls on every card at all times in edit mode. All three are buttons, so they're in the Tab order and announced by screen readers. (A locked step has two: it shows a lock icon instead of a drag handle.) The cost is a busier edit view, which is one reason to confirm the choice with design.
+
 ## Known differences from the Figma
 
 - **The drag handle sits 1px higher than the step number.** The cause is how borders are measured. In Figma, a card's stroke is drawn inside the frame and takes up no layout space. In CSS, `Card`'s 1px `border` does take space, so everything inside the card moves down 1px compared with the design. This is a common gap between Figma and production code. The header already avoids it by using an inset shadow in place of a border. We haven't changed `Card` yet, because its hover, selected and drag states will probably change how it draws its edge, so we'll fix this when we build those states.

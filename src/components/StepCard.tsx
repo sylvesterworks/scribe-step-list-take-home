@@ -1,6 +1,10 @@
 import { useContext } from 'react';
-import { faGripVertical, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { faGripVertical, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { cn } from '../lib/cn';
 import { EditModeContext } from '../lib/editMode';
 import { linkify } from '../lib/linkify';
 import { Card } from '../ui/Card';
@@ -13,7 +17,8 @@ import type { Step } from '../data/steps';
 type Props = {
   step: Step;
   index: number;
-  onOpen: (id: string) => void;
+  isSelected: boolean;
+  onSelect: (id: string) => void;
   onRename: (id: string) => void;
   onDelete: (id: string) => void;
 };
@@ -21,19 +26,40 @@ type Props = {
 /**
  * The card as it exists today. It is not styled and it is not finished.
  */
-export function StepCard({ step, index, onOpen, onRename, onDelete }: Props) {
-  // Drag, rename and delete only exist in edit mode. Opening a step always works.
+export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete }: Props) {
+  // Drag, rename, delete and selecting only work in edit mode.
   const isEditing = useContext(EditModeContext);
+
+  // The card is what moves; the grip is the only thing that starts a drag
+  // (`setActivatorNodeRef` + `listeners`). A locked step can't be picked up
+  // (draggable) and nothing can be dropped onto its position (droppable).
+  // It must be the object form: `disabled: true` only disables dragging.
+  const locked = step.locked ?? false;
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: step.id, disabled: { draggable: locked, droppable: locked } });
 
   return (
     <Card
+      ref={setNodeRef}
       data-id="step-card"
       // `relative` so the drag handle can be positioned against the card.
-      className="relative"
+      // Focus: border turns focus-colored when anything inside has keyboard
+      // focus (`:has(:focus-visible)`, so mouse clicks don't trigger it).
+      // Selected or dragging: the same border. While dragging, `z-10` keeps
+      // the card above the ones it passes.
+      className={cn(
+        'relative has-[:focus-visible]:border-focus',
+        isEditing && 'cursor-pointer',
+        (isSelected || isDragging) && 'border-focus',
+        isDragging && 'z-10',
+      )}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       onClick={(e) => {
+        // Selecting is part of editing; in view mode a click does nothing.
+        if (!isEditing) return;
         // A click on a link in the text follows the link, not the card.
         if ((e.target as HTMLElement).closest('a')) return;
-        onOpen(step.id);
+        onSelect(step.id);
       }}
     >
       {isEditing && (
@@ -44,7 +70,21 @@ export function StepCard({ step, index, onOpen, onRename, onDelete }: Props) {
           className="absolute right-full top-0 flex h-[72px] w-[60px] items-center justify-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <IconButton icon={faGripVertical} label={`Reorder ${step.title}`} variant="ghost" />
+          {step.locked ? (
+            <FontAwesomeIcon icon={faLock} className="text-dim" title="Locked: this step can't be moved" />
+          ) : (
+            <IconButton
+              ref={setActivatorNodeRef}
+              icon={faGripVertical}
+              label={`Reorder ${step.title}`}
+              variant="ghost"
+              // `touch-none` stops the browser scrolling the page when a
+              // finger drags the grip, so touch reaches dnd-kit instead.
+              className="touch-none"
+              {...attributes}
+              {...listeners}
+            />
+          )}
         </div>
       )}
       <div>
