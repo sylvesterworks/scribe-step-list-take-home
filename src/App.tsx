@@ -44,9 +44,8 @@ export default function App() {
   const [savedSteps, setSavedSteps] = useState<Step[]>(initialSteps);
   const [draftSteps, setDraftSteps] = useState<Step[]>(initialSteps);
   const [isEditing, setIsEditing] = useState(false);
-  // One step can be selected at a time, in edit mode only; clicking a card
-  // selects it, and "Done editing" clears it.
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The one step whose title and description are open as form fields, if any.
+  const [editingStepId, setEditingStepId] = useState<string | null>(null);
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -57,17 +56,13 @@ export default function App() {
 
   function finishEditing() {
     setSavedSteps(draftSteps);
-    setSelectedId(null);
+    setEditingStepId(null);
     setIsEditing(false);
   }
 
-
-  function renameStep(id: string) {
-    const step = steps.find((s) => s.id === id);
-    const title = window.prompt('Rename step', step?.title);
-    if (title) {
-      setDraftSteps((prev) => prev.map((s) => (s.id === id ? { ...s, title } : s)));
-    }
+  function saveStep(id: string, title: string, description: string) {
+    setDraftSteps((prev) => prev.map((s) => (s.id === id ? { ...s, title, description } : s)));
+    setEditingStepId(null);
   }
 
   function deleteStep(id: string) {
@@ -169,9 +164,10 @@ export default function App() {
                   <StepCard
                     step={step}
                     index={i}
-                    isSelected={step.id === selectedId}
-                    onSelect={setSelectedId}
-                    onRename={renameStep}
+                    isEditingStep={step.id === editingStepId}
+                    onEdit={setEditingStepId}
+                    onSave={saveStep}
+                    onCancel={() => setEditingStepId(null)}
                     onDelete={deleteStep}
                   />
                 </li>

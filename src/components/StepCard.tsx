@@ -1,7 +1,7 @@
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { faGripVertical, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faGripVertical, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { cn } from '../lib/cn';
@@ -17,17 +17,25 @@ import type { Step } from '../data/steps';
 type Props = {
   step: Step;
   index: number;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  onRename: (id: string) => void;
+  /** True while this step's title and description are open as form fields. */
+  isEditingStep: boolean;
+  onEdit: (id: string) => void;
+  onSave: (id: string, title: string, description: string) => void;
+  onCancel: () => void;
   onDelete: (id: string) => void;
 };
+
+// The inline fields borrow the secondary Button's border and radius. On focus
+// they match the card: the 1px border turns `--border-focus`, with no outline.
+const FIELD_CLASS =
+  'w-full rounded-md border border-default bg-surface-default px-3 text-default ' +
+  'focus-visible:border-focus focus-visible:outline-none';
 
 /**
  * The card as it exists today. It is not styled and it is not finished.
  */
-export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete }: Props) {
-  // Drag, rename, delete and selecting only work in edit mode.
+export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel, onDelete }: Props) {
+  // Drag, edit and delete only work in edit mode.
   const isEditing = useContext(EditModeContext);
 
   // The card is what moves; the grip is the only thing that starts a drag
@@ -38,6 +46,36 @@ export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: step.id, disabled: { draggable: locked, droppable: locked } });
 
+  // The fields are uncontrolled (they start from `defaultValue`); Save reads
+  // them through these refs.
+  const titleRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  // The edit/save button. When the fields close, focus goes back here so a
+  // keyboard user isn't dropped at the top of the page.
+  const editButtonRef = useRef<HTMLButtonElement>(null);
+
+  function save() {
+    // An empty title isn't allowed, so it falls back to the current one.
+    const title = titleRef.current?.value.trim() || step.title;
+    const description = descriptionRef.current?.value.trim() ?? step.description;
+    editButtonRef.current?.focus();
+    onSave(step.id, title, description);
+  }
+
+  function cancel() {
+    editButtonRef.current?.focus();
+    onCancel();
+  }
+
+  // Enter in the title saves; Escape in either field cancels.
+  function handleFieldKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Escape') cancel();
+    if (e.key === 'Enter' && e.currentTarget === titleRef.current) {
+      e.preventDefault();
+      save();
+    }
+  }
+
   return (
     <Card
       ref={setNodeRef}
@@ -45,21 +83,22 @@ export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete
       // `relative` so the drag handle can be positioned against the card.
       // Focus: border turns focus-colored when anything inside has keyboard
       // focus (`:has(:focus-visible)`, so mouse clicks don't trigger it).
-      // Selected or dragging: the same border. While dragging, `z-10` keeps
-      // the card above the ones it passes.
+      // Editing this step or dragging it: the same border. While dragging,
+      // `z-10` keeps the card above the ones it passes.
       className={cn(
         'relative has-[:focus-visible]:border-focus',
         isEditing && 'cursor-pointer',
-        (isSelected || isDragging) && 'border-focus',
+        (isEditingStep || isDragging) && 'border-focus',
         isDragging && 'z-10',
       )}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       onClick={(e) => {
-        // Selecting is part of editing; in view mode a click does nothing.
+        // In edit mode, clicking the card does its first action: edit.
+        // In view mode a click does nothing.
         if (!isEditing) return;
         // A click on a link in the text follows the link, not the card.
         if ((e.target as HTMLElement).closest('a')) return;
-        onSelect(step.id);
+        onEdit(step.id);
       }}
     >
       {isEditing && (
@@ -90,17 +129,33 @@ export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete
       <div>
         <div className="flex items-center gap-3">
           <StepNumber>{index + 1}</StepNumber>
-          <h2>{linkify(step.title, 'heading')}</h2>
+          {isEditingStep ? (
+            <input
+              ref={titleRef}
+              // The user just asked to edit, so put them in the title.
+              autoFocus
+              aria-label="Step title"
+              defaultValue={step.title}
+              onKeyDown={handleFieldKeyDown}
+              className={cn(FIELD_CLASS, 'h-8 min-w-0 flex-1 font-bold')}
+            />
+          ) : (
+            <h2>{linkify(step.title, 'heading')}</h2>
+          )}
           {isEditing && (
             // `ml-auto` takes up the free space, pushing the buttons right.
             <div className="ml-auto flex gap-1">
+              {/* One button that switches between Edit and Save, so keyboard
+                  focus stays on it when the fields open and close. */}
               <IconButton
-                icon={faPencil}
-                label={`Rename ${step.title}`}
+                ref={editButtonRef}
+                icon={isEditingStep ? faCheck : faPencil}
+                label={isEditingStep ? 'Save' : `Edit ${step.title}`}
                 variant="ghost"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRename(step.id);
+                  if (isEditingStep) save();
+                  else onEdit(step.id);
                 }}
               />
               <IconButton
@@ -115,7 +170,18 @@ export function StepCard({ step, index, isSelected, onSelect, onRename, onDelete
             </div>
           )}
         </div>
-        <p className="py-2">{linkify(step.description, 'body')}</p>
+        {isEditingStep ? (
+          <textarea
+            ref={descriptionRef}
+            aria-label="Step description"
+            defaultValue={step.description}
+            rows={2}
+            onKeyDown={handleFieldKeyDown}
+            className={cn(FIELD_CLASS, 'my-2 block py-1')}
+          />
+        ) : (
+          <p className="py-2">{linkify(step.description, 'body')}</p>
+        )}
       </div>
       <Screenshot hue={step.hue} />
     </Card>
