@@ -38,7 +38,11 @@ Your task is in the brief you were sent, not in this file.
 ## Tokens added
 
 - `--width-content: 720px` (Tailwind: `max-w-content`). The width of the page's content column in the Figma. Tailwind's nearest step is `max-w-3xl` (768px), so matching the design would otherwise mean a hard-coded `max-w-[720px]`. A raw value like that can drift from the design without anyone noticing. As a token, the column width has a name, lives in one place, and every page that uses it changes together.
-- `--border-info: #5098c1`, the stroke of the `Link` badge. The info family already had `--text-info` and `--bg-surface-info` but no border. The closest existing color was `--border-focus`, but using the focus-ring token for decoration ties the two together: retune the focus ring (it currently fails 3:1 contrast) and every badge changes with it. The value is the same as `--accent-1`.
+- `--border-info: #5098c1`, the stroke of the `Link` badge. The info family already had `--text-info` and `--bg-surface-info` but no border. The closest existing color was `--border-focus`, but using the focus-ring token for decoration ties the two together: retune the focus ring (as we did, see "Tokens changed") and every badge would change with it. The value is the same as `--accent-1`.
+
+## Tokens changed
+
+- `--border-focus`: from `rgb(80 152 193 / 0.67)` to solid `rgb(80 152 193)`. At 67% opacity the focus ring was 2.09:1 against white and 2.03:1 against the page background, below the 3:1 minimum for focus indicators (WCAG 1.4.11). The lowest opacity that passes on the page background is 0.99, so we made it solid: 3.18:1 on white and 3.05:1 on `--bg-surface-dim`. That margin is thin. A slightly darker blue would give more room, but that's a change to the brand color, which is a decision for design.
 
 ## Where we went beyond the Figma
 
