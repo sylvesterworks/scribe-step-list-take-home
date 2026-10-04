@@ -28,7 +28,7 @@ export const IconLink = forwardRef<HTMLAnchorElement, IconLinkProps>(
       className={cn(buttonClassName(variant, 'icon'), className)}
       {...props}
     >
-      <FontAwesomeIcon icon={icon} />
+      <FontAwesomeIcon icon={icon} className="text-dim" />
     </a>
   ),
 );

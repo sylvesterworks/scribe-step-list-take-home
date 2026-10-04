@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { Breadcrumbs, type Crumb } from './components/Breadcrumbs';
+import { Breadcrumbs, type Crumb } from './ui/Breadcrumbs';
 import { PageHeading } from './components/PageHeading';
-import { NavigationTop } from './components/NavigationTop';
+import { NavigationTop } from './ui/NavigationTop';
 import { PageLayout } from './components/PageLayout';
 import { StepList } from './components/StepList';
 import { StepCard } from './components/StepCard';

@@ -55,6 +55,8 @@ Your task is in the brief you were sent, not in this file.
 
 - `IconButton`: a square, icon-only `Button`. `label` is required and becomes the `aria-label`.
 - `IconLink`: an `<a>` that looks like an `IconButton`, for navigation. `label` is required.
+- `NavigationTop`: the page's top bar with `left` and `right` slots. It renders a `<header>`.
+- `Breadcrumbs`: a `<nav aria-label="Breadcrumb">` containing an `<ol>`. The current page is bold with `aria-current="page"`, and the chevron separators are hidden from screen readers.
 - `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
 - `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.
 - `Card` padding changed from `px-6 py-5` to `p-4` to match the Figma. Overriding it from `StepCard` with `className` doesn't work: the starter's `cn` doesn't merge conflicting classes, and Tailwind outputs `.p-4` before `.px-6`/`.py-5`, so the base padding always wins.

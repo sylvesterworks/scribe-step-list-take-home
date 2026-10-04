@@ -17,7 +17,7 @@ export type IconButtonProps = Omit<ButtonProps, 'size' | 'children' | 'aria-labe
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ icon, label, ...props }, ref) => (
     <Button ref={ref} size="icon" aria-label={label} {...props}>
-      <FontAwesomeIcon icon={icon} />
+      <FontAwesomeIcon icon={icon} className="text-dim" />
     </Button>
   ),
 );

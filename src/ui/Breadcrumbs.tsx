@@ -18,7 +18,7 @@ export type BreadcrumbsProps = React.HTMLAttributes<HTMLElement> & {
 export const Breadcrumbs = forwardRef<HTMLElement, BreadcrumbsProps>(
   ({ items, className, ...props }, ref) => (
     <nav ref={ref} aria-label="Breadcrumb" className={className} {...props}>
-      {/* role="list" for the same Safari reason as StepList. */}
+      {/* Preflight's `list-style: none` makes Safari/VoiceOver drop list semantics; role="list" restores them. */}
       <ol role="list" className="flex items-center gap-2">
         {items.map((item, i) => (
           <li key={item.title} className="flex items-center gap-2">
