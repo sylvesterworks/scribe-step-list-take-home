@@ -75,6 +75,18 @@ describe('App: edit mode', () => {
     expect(screen.queryByRole('button', { name: /^Reorder/ })).not.toBeInTheDocument();
   });
 
+  it('icon buttons show their label as a hover tooltip', async () => {
+    const user = setup(makeSteps(2));
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    for (const name of ['Reorder Step 2', 'Edit Step 2', 'Delete Step 2']) {
+      expect(screen.getByRole('button', { name })).toHaveAttribute('title', name);
+    }
+    expect(screen.getByRole('link', { name: 'Back to the exercise brief' })).toHaveAttribute(
+      'title',
+      'Back to the exercise brief',
+    );
+  });
+
   it('edits a title inline; Enter saves, Escape cancels', async () => {
     const user = setup(makeSteps(3));
     await user.click(screen.getByRole('button', { name: 'Edit' }));

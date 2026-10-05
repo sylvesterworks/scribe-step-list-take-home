@@ -16,7 +16,9 @@ export type IconButtonProps = Omit<ButtonProps, 'size' | 'children' | 'aria-labe
  */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ icon, label, ...props }, ref) => (
-    <Button ref={ref} size="icon" aria-label={label} {...props}>
+    // `title` shows the same label as a tooltip on mouse hover, so mouse
+    // users don't have to guess from the icon. `aria-label` is the name.
+    <Button ref={ref} size="icon" aria-label={label} title={label} {...props}>
       <FontAwesomeIcon icon={icon} className="text-dim" />
     </Button>
   ),

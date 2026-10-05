@@ -25,6 +25,8 @@ export const IconLink = forwardRef<HTMLAnchorElement, IconLinkProps>(
     <a
       ref={ref}
       aria-label={label}
+      // Same label as a hover tooltip for mouse users (see IconButton).
+      title={label}
       className={cn(buttonClassName(variant, 'icon'), className)}
       {...props}
     >
