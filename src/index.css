@@ -63,8 +63,14 @@
     --radius-xl: 0.75rem;
     --radius-2xl: 1rem;
 
-    /* Layout. Added for this exercise, see README. Not a Figma variable. */
+    /* Layout. Added for this exercise, see README. Not Figma variables. */
     --width-content: 720px;
+    /* The drag handle's box beside each card, and the page's side padding
+       that has to fit it. One value, so they can't drift apart. */
+    --width-drag-gutter: 60px;
+    /* The Figma's drag preview. Also the size the drop animation grows from. */
+    --drag-preview-width: 252px;
+    --drag-preview-height: 156px;
 
     /* Motion. Not in the Figma — the written spec covers it. */
     --duration-fast: 120ms;

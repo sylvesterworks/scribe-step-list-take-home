@@ -176,11 +176,16 @@ export function StepCard({
       }}
     >
       {isEditing && (
-        // A 60x72 box against the card's outer left edge (`right-full`), with
-        // the button centered in it so it lines up with the step number.
+        // A box against the card's outer left edge (`right-full`), with the
+        // button centered in it so it lines up with the step number.
+        // - Width: the drag gutter token (60px), which PageLayout also uses
+        //   as its side padding.
+        // - Height: 72px = the card's top padding (p-4) + the step number
+        //   (h-10) + the same again below, so its center is the number's
+        //   center. Built from those two scale steps, so it follows them.
         // stopPropagation here covers the button and the empty box around it.
         <div
-          className="absolute right-full top-0 flex h-[72px] w-[60px] animate-fade-in items-center justify-center motion-reduce:animate-none"
+          className="absolute right-full top-0 flex h-[calc(theme(spacing.4)*2+theme(spacing.10))] w-drag-gutter animate-fade-in items-center justify-center motion-reduce:animate-none"
           onClick={(e) => e.stopPropagation()}
         >
           {step.locked ? (

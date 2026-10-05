@@ -131,6 +131,8 @@ The brief didn't ask for tests and the starter had no test runner. I added them 
 
 ### Added (not in the Figma):
 - `--width-content`: the 720px content column (Tailwind `max-w-content`).
+- `--width-drag-gutter`: 60px (Tailwind `px-drag-gutter`, `w-drag-gutter`). The drag handle's box beside each card, and the page side padding that has to fit it. They were two separate `60px` values; as one token, widening the handle can't push it off the page.
+- `--drag-preview-width` / `--drag-preview-height`: 252×156 (Tailwind `w-drag-preview`, `h-drag-preview`). The Figma's drag preview, and the size the drop animation grows the card out of. They were repeated in the component and in the animation; as tokens, resizing the preview keeps the drop animation matching.
 - `--border-info`: the `Link` badge stroke, so badges don't depend on the focus token.
 - Success, error and warning text, fill and border colors for `Banner`. Text is 6.9:1 or better and borders 3:1 or better, in both themes.
 

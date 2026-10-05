@@ -3,7 +3,7 @@
  * the pointer (or the arrow keys) during a drag, rendered in dnd-kit's
  * DragOverlay. Purely visual: screen readers get the drag announcements.
  *
- * 252x156. On mount it animates from the grabbed card's size down to that
+ * Sized by --drag-preview-width/height (252x156). On mount it animates from the grabbed card's size down to that
  * (`animate-preview-shrink`, see tailwind.config.ts), which reads as lift.
  */
 type Props = {
@@ -21,7 +21,7 @@ export function DragPreview({ number, fromWidth, fromHeight }: Props) {
       data-drag-preview
       // Read by the keyframe's `from`.
       style={{ '--drag-from-width': `${fromWidth}px`, '--drag-from-height': `${fromHeight}px` } as React.CSSProperties}
-      className="relative flex h-[156px] w-[252px] cursor-grabbing flex-col rounded-xl border border-focus bg-surface-default p-3 shadow-base animate-preview-shrink motion-reduce:animate-none"
+      className="relative flex h-drag-preview w-drag-preview cursor-grabbing flex-col rounded-xl border border-focus bg-surface-default p-3 shadow-base animate-preview-shrink motion-reduce:animate-none"
     >
       {/* Step number badge on the top-left corner. White on --text-info is
           9:1; white on --accent-1 would be only 3.18:1 for 12px text. */}

@@ -16,8 +16,9 @@ export const PageLayout = forwardRef<HTMLElement, PageLayoutProps>(
       className={cn(
         // `box-content` makes max-width measure the content, not the padding,
         // so the column stays 720px and the padding sits outside it.
-        // 60px sides: room for StepCard's 60px drag-handle box in edit mode.
-        'mx-auto box-content flex max-w-content flex-col gap-8 px-[60px] py-12',
+        // Side padding is the drag gutter (60px): room for StepCard's
+        // drag-handle box in edit mode. Same token, so they can't drift.
+        'mx-auto box-content flex max-w-content flex-col gap-8 px-drag-gutter py-12',
         className,
       )}
       {...props}

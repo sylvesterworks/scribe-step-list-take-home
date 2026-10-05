@@ -14,7 +14,8 @@ export const StepNumber = forwardRef<HTMLSpanElement, NumberProps>(
       ref={ref}
       className={cn(
         'inline-flex shrink-0 select-none items-center justify-center whitespace-nowrap font-semibold',
-        'bg-surface-info rounded-[2.5rem] w-[2.5rem] h-[2.5rem]',
+        // 40px circle: h-10/w-10 are on Tailwind's scale; rounded-full makes it round.
+        'h-10 w-10 rounded-full bg-surface-info',
         className,
       )}
       {...props}

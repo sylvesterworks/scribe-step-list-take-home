@@ -85,6 +85,16 @@ export default {
       maxWidth: {
         content: 'var(--width-content)',
       },
+      // `spacing` covers padding and width: px-drag-gutter, w-drag-gutter.
+      spacing: {
+        'drag-gutter': 'var(--width-drag-gutter)',
+      },
+      width: {
+        'drag-preview': 'var(--drag-preview-width)',
+      },
+      height: {
+        'drag-preview': 'var(--drag-preview-height)',
+      },
       transitionTimingFunction: {
         standard: 'var(--ease-standard)',
         entrance: 'var(--ease-entrance)',
@@ -101,7 +111,7 @@ export default {
           from: { opacity: '0' },
         },
         // The drag preview starts at the grabbed card's size (CSS variables
-        // set by DragPreview) and shrinks to its own 252x156.
+        // set by DragPreview) and shrinks to its own --drag-preview-width / --drag-preview-height.
         'preview-shrink': {
           from: { width: 'var(--drag-from-width)', height: 'var(--drag-from-height)' },
         },
@@ -113,18 +123,19 @@ export default {
         },
         // On drop, the reverse: the slot grows from 64px back to the card's
         // height, so the cards below glide down. At the same time the card
-        // is revealed from the preview's 252x156 at its top-left corner
-        // (clipping, not scaling, so the text never stretches).
+        // is revealed from the preview's size at its top-left corner
+        // (clipping, not scaling, so the text never stretches). Sizes and corner radius are tokens.
         // Both need an explicit `to`: the card's own values are `none`, and
         // neither max-height nor clip-path can animate to `none`.
         'card-expand': {
           from: {
             maxHeight: '4rem',
-            clipPath: 'inset(0 calc(100% - 252px) calc(100% - 156px) 0 round 0.75rem)',
+            clipPath:
+              'inset(0 calc(100% - var(--drag-preview-width)) calc(100% - var(--drag-preview-height)) 0 round var(--radius-xl))',
           },
           to: {
             maxHeight: 'var(--drag-card-height)',
-            clipPath: 'inset(0 0 0 0 round 0.75rem)',
+            clipPath: 'inset(0 0 0 0 round var(--radius-xl))',
           },
         },
       },

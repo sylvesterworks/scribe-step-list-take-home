@@ -38,7 +38,8 @@ Element.prototype.scrollIntoView = () => {};
 // A fake layout, so dnd-kit can tell what is where. Every other element keeps
 // jsdom's 0x0 box.
 // - Step cards: 720x254, stacked 300px apart in DOM order.
-// - The drag preview: 252x156, at the top-left of its DragOverlay wrapper,
+// - The drag preview: 252x156 (--drag-preview-width/height in index.css;
+//   jsdom never loads our CSS, so the numbers are repeated here), at the top-left of its DragOverlay wrapper,
 //   which dnd-kit positions with inline top/left at the grabbed card.
 //   dnd-kit measures the overlay's first child (the preview) and computes
 //   every collision from it, so without this all drags start at 0,0.
