@@ -73,8 +73,64 @@
     --ease-entrance: cubic-bezier(0, 0, 0, 1);
   }
 
+  /**
+   * Dark theme. Only colors and shadows change; radius, layout and motion are
+   * shared. `data-theme` is set on <html> by the script in index.html (before
+   * first paint) and by the footer's ThemeToggle.
+   *
+   * Values come from the Figma's dark mode where it has them; the rest are
+   * marked "placeholder" or "not in the Figma". All checked against WCAG
+   * (text 4.5:1 on its surface, focus and borders 3:1).
+   */
+  :root[data-theme='dark'] {
+    /* Text */
+    --text-default: #f9fafb;
+    --text-dim: #adb0b3;
+    --text-info: #c3e1ee;
+    --text-on-element: rgba(0 0 0 / 0.95); /* placeholder: dark text on the light primary element */
+    --text-placeholder: #7c8186; /* placeholder */
+    --text-success: #9fd9b0; /* not in the Figma */
+    --text-error: #f2a9a7; /* not in the Figma */
+    --text-warning: #f0cf7a; /* not in the Figma */
+
+    /* Borders */
+    --border-default: #383b3f;
+    --border-focus: rgb(80 152 193); /* transparency removed to meet WCAG 2.2 contrast guidelines */
+    --border-dim: #26292c; /* placeholder */
+    --border-emphasis: #464b50; /* placeholder */
+    --border-info: rgba(80 152 193 / 0.32);
+    --border-success: #5fb97a; /* not in the Figma */
+    --border-error: #e07a78; /* not in the Figma */
+    --border-warning: #d1a23a; /* not in the Figma */
+
+    /* Surfaces */
+    --bg-surface-default: #141617;
+    --bg-surface-dim: #222425;
+    --bg-surface-neutral: rgb(249 250 252 / 0.05);
+    --bg-surface-info: rgb(80 152 193 / 0.17);
+    --bg-surface-success: #173322; /* not in the Figma */
+    --bg-surface-error: #3a1c1c; /* not in the Figma */
+    --bg-surface-warning: #3a2f12; /* not in the Figma */
+
+    /* Accents */
+    --accent-1: #75b1d1;
+
+    /* Elements: inverted, a light primary button on the dark page. */
+    --bg-element-primary: #f1f3f5; /* not in the Figma */
+    --bg-element-primary-lighter: #d4d8dc; /* not in the Figma */
+
+    /* Elevation. The Figma's shadow is all but invisible on a dark surface,
+       so lift doesn't rely on it: lifted things carry a --border-focus outline. */
+    --shadow-base:0px 1px 2px -1px rgba(15, 23, 42, 0.1);
+    --shadow-inner: inset 0px 2px 4px 0px rgba(15, 23, 42, 0.05); /* not in the Figma */
+  }
+
   html {
     color-scheme: light;
+  }
+  /* Native controls and scrollbars follow the theme too. */
+  :root[data-theme='dark'] {
+    color-scheme: dark;
   }
   body {
     background: var(--bg-surface-dim);

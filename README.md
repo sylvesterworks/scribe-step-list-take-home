@@ -58,6 +58,7 @@ Your task is in the brief you were sent, not in this file.
 ## Tokens changed
 
 - `--border-focus`: from `rgb(80 152 193 / 0.67)` to solid `rgb(80 152 193)`. At 67% opacity the focus ring was 2.09:1 against white and 2.03:1 against the page background, below the 3:1 minimum for focus indicators (WCAG 1.4.11). The lowest opacity that passes on the page background is 0.99, so we made it solid: 3.18:1 on white and 3.05:1 on `--bg-surface-dim`. That margin is thin. A slightly darker blue would give more room, but that's a change to the brand color, which is a decision for design.
+- `--border-focus` (dark): the Figma's dark value is `rgb(80 152 193 / 0.51)`, which is 2.39:1 on dark cards and 2.28:1 on the dark page, the same failure as light. Solid `rgb(80 152 193)` gives 5.71:1 and 4.90:1.
 
 ## Where we went beyond the Figma
 
@@ -84,6 +85,12 @@ Your task is in the brief you were sent, not in this file.
   - **Locked means "can't be reordered", nothing more.** That's how the starter's `Step` type defines it. A locked step can still be edited and deleted, and Undo brings it back at its old position, still locked.
   - **The first step stays pinned.** The starter's data calls step 1 "the guide's entry point", pinned in place. If the locked first step is deleted, then on "Done editing" whichever step is now first takes over the lock. This happens at save rather than at delete, so Undo works normally, and the author can drag a different step to the top before saving.
 - **Tests.** The starter had no test runner. We added Vitest with React Testing Library (`src/App.test.tsx`), testing at the `App` level, the way a user would use it: view and edit mode, inline editing, keyboard reordering with its announcement, Escape, "Done editing" keeping the order, locked steps (first and middle), delete and undo with focus, and the empty and one-step lists. jsdom has no layout, so `src/test/setup.ts` gives the step cards and the drag preview a fake one; that's what lets dnd-kit's keyboard reordering run in tests. Pointer and touch dragging, and the animations, are checked by hand in a browser.
+- **Dark mode (the optional bonus).** A "Light / Dark" switch in the page footer. With no saved choice it follows the browser's `prefers-color-scheme`, including if that changes mid-session. Flipping it saves the choice in `localStorage`, and the saved choice wins after a refresh.
+  - **How it works:** one `:root[data-theme="dark"]` block in `index.css` redefines the color and shadow tokens. Components didn't change, because they only read tokens. A tiny script in `index.html` sets `data-theme` before first paint, so dark-mode users don't get a white flash. `ThemeToggle` handles changes after that.
+  - **Values:** taken from the Figma's dark mode where it has them. Tokens the Figma doesn't cover (our status colors, the primary button's hover shade and a few borders) are marked "not in the Figma" or "placeholder" in `index.css`. Every pairing was checked against WCAG: text at least 4.5:1, focus and borders at least 3:1.
+  - **Lift on dark:** as the brief warns, a shadow barely shows on a dark surface. With the Figma's value it's effectively invisible (the shadow's darkest pixel is within a few levels of the card). So lift doesn't depend on it: the drag preview's `--border-focus` outline is what makes it read as lifted, in both themes.
+  - **Tailwind `dark:` variants** now follow the same attribute (`darkMode: ['selector', '[data-theme="dark"]']`). Before, the starter's `Screenshot` switched on the OS setting even though the tokens were light-only.
+  - **Limits:** there's no way to go back to "follow the browser" once a choice is saved, short of clearing site data; a three-way Light / System / Dark control would fix that. And the placeholder screenshots stay pastel in dark mode, because the starter draws them with inline colors; real step screenshots are captured images and wouldn't follow the theme either.
 
 ## Design questions for the design team
 
@@ -104,6 +111,7 @@ These are places where we think the design is wrong rather than just silent. We'
 - `IconLink`: an `<a>` that looks like an `IconButton`, for navigation. `label` is required.
 - `NavigationTop`: the page's top bar with `left` and `right` slots. It renders a `<header>`.
 - `Breadcrumbs`: a `<nav aria-label="Breadcrumb">` containing an `<ol>`. The current page is bold with `aria-current="page"`, and the chevron separators are hidden from screen readers.
+- `Switch`: an on/off setting, built as a `<button role="switch" aria-checked>`. It has a visible label, or a pair of side labels ("Light" / "Dark") with the name given as `aria-label`. The track's edge is at least 3:1 against its surface whether the switch is on or off.
 - `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
 - `Banner`: a message in a card-shaped box, with an icon, a title and an optional action. Variants are `info`, `success`, `error` and `warning`, plus `drop`: a placeholder for drag and drop, white with a dashed border and centered text, with no icon because a drag preview usually covers the left edge. It's at least 48px tall, with 12px/24px padding. Long titles wrap, and the icon and action stay aligned with the first line. It isn't a live region itself; whatever renders it decides how the message gets announced.
 - `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.

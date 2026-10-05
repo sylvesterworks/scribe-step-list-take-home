@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import App from './App';
 import type { Step } from './data/steps';
@@ -216,6 +216,35 @@ describe('App: delete and undo', () => {
     expect(titles()).toEqual(['Step 1', 'Step 2', 'Step 3']);
     expect(screen.getByRole('button', { name: 'Delete Step 2' })).toHaveFocus();
     expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+  });
+});
+
+describe('App: theme', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    delete document.documentElement.dataset.theme;
+  });
+
+  it("with no saved choice, follows the browser's setting (light in tests)", () => {
+    setup();
+    expect(screen.getByRole('switch', { name: 'Dark mode' })).not.toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe('light');
+  });
+
+  it('flipping the switch applies dark and saves the choice', async () => {
+    const user = setup();
+    await user.click(screen.getByRole('switch', { name: 'Dark mode' }));
+
+    expect(screen.getByRole('switch', { name: 'Dark mode' })).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(localStorage.getItem('theme')).toBe('dark');
+  });
+
+  it('a saved choice wins on the next load', () => {
+    localStorage.setItem('theme', 'dark');
+    setup();
+    expect(screen.getByRole('switch', { name: 'Dark mode' })).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe('dark');
   });
 });
 

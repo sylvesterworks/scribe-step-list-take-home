@@ -7,6 +7,9 @@ import type { Config } from 'tailwindcss';
  */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // `dark:` variants follow our theme attribute, not the OS setting, so they
+  // match the tokens (the starter's Screenshot uses `dark:`).
+  darkMode: ['selector', '[data-theme="dark"]'],
   theme: {
     extend: {
       fontFamily: {

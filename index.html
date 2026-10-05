@@ -10,6 +10,18 @@
       href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Set the theme before first paint, so a dark-mode user doesn't see a
+         white flash. A saved choice wins; otherwise the browser's setting.
+         Keep in sync with src/components/ThemeToggle.tsx. -->
+    <script>
+      try {
+        var theme = localStorage.getItem('theme');
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

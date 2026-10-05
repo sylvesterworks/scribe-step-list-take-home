@@ -24,7 +24,9 @@ import {
 
 import { Breadcrumbs, type Crumb } from './ui/Breadcrumbs';
 import { DragPreview } from './components/DragPreview';
+import { PageFooter } from './components/PageFooter';
 import { PageHeading } from './components/PageHeading';
+import { ThemeToggle } from './components/ThemeToggle';
 import { NavigationTop } from './ui/NavigationTop';
 import { PageLayout } from './components/PageLayout';
 import { StepList } from './components/StepList';
@@ -367,6 +369,9 @@ export default function App({ initialSteps = fixtureSteps }: { initialSteps?: St
           </DndContext>
         )}
       </PageLayout>
+      <PageFooter>
+        <ThemeToggle />
+      </PageFooter>
     </EditModeContext.Provider>
   );
 }
