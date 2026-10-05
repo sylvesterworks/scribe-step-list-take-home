@@ -3,12 +3,14 @@ import { flushSync } from 'react-dom';
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type Announcements,
   type DragEndEvent,
+  type DragStartEvent,
   type UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
@@ -19,6 +21,8 @@ import {
 } from '@dnd-kit/sortable';
 
 import { Breadcrumbs, type Crumb } from './ui/Breadcrumbs';
+import { DragPreview } from './components/DragPreview';
+import { PageFooter } from './components/PageFooter';
 import { PageHeading } from './components/PageHeading';
 import { NavigationTop } from './ui/NavigationTop';
 import { PageLayout } from './components/PageLayout';
@@ -30,6 +34,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { Banner } from './ui/Banner';
 import { Button } from './ui/Button';
 import { IconLink } from './ui/IconLink';
+import { Switch } from './ui/Switch';
 
 import { steps as initialSteps, type Step } from './data/steps';
 
@@ -57,6 +62,15 @@ export default function App() {
   // Text for the visually hidden live region: what screen readers hear after
   // a delete or undo.
   const [announcement, setAnnouncement] = useState('');
+  // Footer switch: use the Figma's drag visuals (a small preview follows the
+  // pointer, a "Drop step here" box marks the landing spot) or move the card.
+  const [useDesignDragPreview, setUseDesignDragPreview] = useState(true);
+  // The step being dragged right now, and whether the drag started from the
+  // keyboard. Keyboard drags always move the real card.
+  const [activeDrag, setActiveDrag] = useState<{ id: UniqueIdentifier; byKeyboard: boolean } | null>(
+    null,
+  );
+  const showDragPreview = useDesignDragPreview && activeDrag !== null && !activeDrag.byKeyboard;
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -121,7 +135,14 @@ export default function App() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  function handleDragStart({ active, activatorEvent }: DragStartEvent) {
+    // `activatorEvent` is the event that started the drag: a KeyboardEvent
+    // for Space/Enter on the grip, a PointerEvent for mouse or touch.
+    setActiveDrag({ id: active.id, byKeyboard: activatorEvent instanceof KeyboardEvent });
+  }
+
   function handleDragEnd({ active, over }: DragEndEvent) {
+    setActiveDrag(null);
     if (!over || active.id === over.id) return;
     setDraftSteps((prev) => {
       const from = prev.findIndex((s) => s.id === active.id);
@@ -226,7 +247,9 @@ export default function App() {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
+            onDragCancel={() => setActiveDrag(null)}
             accessibility={{ announcements }}
           >
             <SortableContext items={steps} strategy={verticalListSortingStrategy}>
@@ -243,6 +266,7 @@ export default function App() {
                       step={step}
                       index={i}
                       canReorder={steps.length > 1}
+                      showDropTarget={showDragPreview}
                       isEditingStep={step.id === editingStepId}
                       onEdit={setEditingStepId}
                       onSave={saveStep}
@@ -254,9 +278,22 @@ export default function App() {
                 ))}
               </StepList>
             </SortableContext>
+            {/* What follows the pointer. Rendered outside the list, so it
+                floats above everything. Empty for keyboard drags and when
+                the design preview is switched off: the real card moves. */}
+            <DragOverlay>
+              {showDragPreview && <DragPreview number={position(activeDrag.id)} />}
+            </DragOverlay>
           </DndContext>
         )}
       </PageLayout>
+      <PageFooter>
+        <Switch
+          label="Design drag preview"
+          checked={useDesignDragPreview}
+          onChange={setUseDesignDragPreview}
+        />
+      </PageFooter>
     </EditModeContext.Provider>
   );
 }

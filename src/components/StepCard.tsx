@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { cn } from '../lib/cn';
 import { EditModeContext } from '../lib/editMode';
 import { linkify } from '../lib/linkify';
+import { Banner } from '../ui/Banner';
 import { Card } from '../ui/Card';
 import { IconButton } from '../ui/IconButton';
 import { Screenshot } from '../ui/Screenshot';
@@ -26,6 +27,11 @@ type Props = {
   index: number;
   /** False when the list has only one step, so there's nothing to reorder. */
   canReorder: boolean;
+  /**
+   * True during a mouse/touch drag with the design's drag preview on. The
+   * dragged card then shows as a "Drop step here" box where it would land.
+   */
+  showDropTarget: boolean;
   /** True while this step's title and description are open as form fields. */
   isEditingStep: boolean;
   onEdit: (id: string) => void;
@@ -43,7 +49,17 @@ const FIELD_CLASS =
 /**
  * The card as it exists today. It is not styled and it is not finished.
  */
-export function StepCard({ step, index, canReorder, isEditingStep, onEdit, onSave, onCancel, onDelete }: Props) {
+export function StepCard({
+  step,
+  index,
+  canReorder,
+  showDropTarget,
+  isEditingStep,
+  onEdit,
+  onSave,
+  onCancel,
+  onDelete,
+}: Props) {
   // Drag, edit and delete only work in edit mode.
   const isEditing = useContext(EditModeContext);
 
@@ -113,6 +129,10 @@ export function StepCard({ step, index, canReorder, isEditingStep, onEdit, onSav
         isEditing && 'cursor-pointer',
         (isEditingStep || isDragging) && 'border-focus',
         isDragging && 'z-10',
+        // Drop target: hide the card and shrink its slot to 64px; the dashed
+        // box below fills it. dnd-kit notices the new height and shifts the
+        // other cards by 64px, so the 32px gaps hold during the drag.
+        isDragging && showDropTarget && 'invisible max-h-16',
       )}
       style={{ transform: CSS.Translate.toString(transform), transition }}
       onClick={(e) => {
@@ -224,6 +244,17 @@ export function StepCard({ step, index, canReorder, isEditingStep, onEdit, onSav
         )}
       </div>
       <Screenshot hue={step.hue} />
+      {isDragging && showDropTarget && (
+        // `visible` overrides the card's `invisible` for this banner only. It
+        // covers the (now 64px) card exactly; `-inset-px` reaches over its
+        // 1px border. `items-center` beats Banner's `items-start` because
+        // Tailwind emits it later, centering the text in the 64px slot.
+        <Banner
+          variant="drop"
+          title="Drop step here"
+          className="visible absolute -inset-px items-center"
+        />
+      )}
     </Card>
   );
 }

@@ -67,6 +67,12 @@ Your task is in the brief you were sent, not in this file.
 - **One-step list.** The drag handle stays visible but disabled (`aria-disabled`, dimmed), so the layout matches a longer list and screen reader users can still find it and hear that it's unavailable. dnd-kit removes its listeners, so it can't be picked up. Cost: it's still a Tab stop, and dnd-kit's hidden instructions still say "press space to pick up".
 - **Empty list.** No empty `<ol>` (screen readers would announce "list, 0 items"). An info `Banner` says "This guide has no steps yet." In edit mode, right after deleting the last step, the Undo banner sits above it. There's no "Add step" button, because adding steps isn't part of this exercise.
 
+- **Drop target, and a switch to compare.** The Figma shows a small mock step while dragging, but not where the step will land. We built both versions behind a "Design drag preview" switch in the page footer, which is on by default:
+  - **On (the design):** during a mouse or touch drag, the mock step follows the pointer (dnd-kit's `DragOverlay`), and the dragged card's slot becomes a "Drop step here" placeholder (`Banner variant="drop"`: white like a card, with a dashed border) that moves to wherever the step will land. The box is 64px tall. The hidden card's slot shrinks to match, and dnd-kit picks up the new height, so the other cards keep their 32px gaps throughout the drag.
+  - **Keyboard drags always move the real card,** so keyboard users see the step itself move with each arrow press, and the announcements describe it.
+  - **Off (our version):** the real card moves with the pointer and the others slide aside. We prefer this one: you can see what you're moving, and there's one visual model for every input. The switch lets reviewers compare the two.
+  - The footer is the place for prototype options. Dark mode will go there too.
+
 ## Design questions for the design team
 
 These are places where we think the design is wrong rather than just silent. We'd take them back to the designers before going further.
@@ -87,7 +93,8 @@ These are places where we think the design is wrong rather than just silent. We'
 - `NavigationTop`: the page's top bar with `left` and `right` slots. It renders a `<header>`.
 - `Breadcrumbs`: a `<nav aria-label="Breadcrumb">` containing an `<ol>`. The current page is bold with `aria-current="page"`, and the chevron separators are hidden from screen readers.
 - `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
-- `Banner`: a message in a card-shaped box, with an icon, a title and an optional action. Variants are `info`, `success`, `error` and `warning`. It's at least 48px tall, with 12px/24px padding. Long titles wrap, and the icon and action stay aligned with the first line. It isn't a live region itself; whatever renders it decides how the message gets announced.
+- `Switch`: an on/off setting, built as a `<button role="switch" aria-checked>` with a visible label. The track's edge is at least 3:1 against white whether the switch is on or off.
+- `Banner`: a message in a card-shaped box, with an icon, a title and an optional action. Variants are `info`, `success`, `error` and `warning`, plus `drop`: a placeholder for drag and drop, white with a dashed border and centered text, with no icon because a drag preview usually covers the left edge. It's at least 48px tall, with 12px/24px padding. Long titles wrap, and the icon and action stay aligned with the first line. It isn't a live region itself; whatever renders it decides how the message gets announced.
 - `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.
 - `Card` padding changed from `px-6 py-5` to `p-4` to match the Figma. Overriding it from `StepCard` with `className` doesn't work: the starter's `cn` doesn't merge conflicting classes, and Tailwind outputs `.p-4` before `.px-6`/`.py-5`, so the base padding always wins.
 

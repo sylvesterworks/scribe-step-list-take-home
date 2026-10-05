@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { cn } from '../lib/cn';
 
-export type BannerVariant = 'info' | 'success' | 'error' | 'warning';
+export type BannerVariant = 'info' | 'success' | 'error' | 'warning' | 'drop';
 
 export type BannerProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> & {
   variant?: BannerVariant;
@@ -24,7 +24,7 @@ export type BannerProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> & 
 // the icon shares. All pass WCAG: text 4.5:1 on the fill, outline 3:1 on the page.
 // The outline is an inset shadow, not a border, so it takes no space and the
 // banner is exactly 48px (a 1px border would make it 50).
-const VARIANTS: Record<BannerVariant, { className: string; icon: IconDefinition }> = {
+const VARIANTS: Record<BannerVariant, { className: string; icon: IconDefinition | null }> = {
   info: {
     className: 'bg-surface-info text-info shadow-[inset_0_0_0_1px_var(--border-info)]',
     icon: faCircleInfo,
@@ -40,6 +40,15 @@ const VARIANTS: Record<BannerVariant, { className: string; icon: IconDefinition 
   warning: {
     className: 'bg-surface-warning text-warning shadow-[inset_0_0_0_1px_var(--border-warning)]',
     icon: faTriangleExclamation,
+  },
+  // A placeholder, not a message: where a dragged item will land. White like a
+  // card, with a 2px dashed outline and centered text in --text-dim (6.95:1 on
+  // white), no icon (a drag preview usually covers the left edge). Box-shadows
+  // can't be dashed, so this one is a real border (taller by 4px unless its
+  // size is set from outside).
+  drop: {
+    className: 'border-2 border-dashed border-[var(--text-dim)] bg-surface-default text-center text-dim',
+    icon: null,
   },
 };
 
@@ -64,9 +73,11 @@ export const Banner = forwardRef<HTMLDivElement, BannerProps>(
       {/* The icon and the action each sit in a 24px box, one line of text
           tall, centered in it. With `items-start` that lines them up with
           the title's first line, however many lines the title wraps to. */}
-      <span className="flex h-6 shrink-0 items-center">
-        <FontAwesomeIcon icon={VARIANTS[variant].icon} />
-      </span>
+      {VARIANTS[variant].icon && (
+        <span className="flex h-6 shrink-0 items-center">
+          <FontAwesomeIcon icon={VARIANTS[variant].icon} />
+        </span>
+      )}
       <div className="min-w-0 flex-1">{title}</div>
       {action && <div className="flex h-6 shrink-0 items-center">{action}</div>}
     </div>
