@@ -39,18 +39,21 @@ Your task is in the brief you were sent, not in this file.
 
 - `--width-content: 720px` (Tailwind: `max-w-content`). The width of the page's content column in the Figma. Tailwind's nearest step is `max-w-3xl` (768px), so matching the design would otherwise mean a hard-coded `max-w-[720px]`. A raw value like that can drift from the design without anyone noticing. As a token, the column width has a name, lives in one place, and every page that uses it changes together.
 - `--border-info: #5098c1`, the stroke of the `Link` badge. The info family already had `--text-info` and `--bg-surface-info` but no border. The closest existing color was `--border-focus`, but using the focus-ring token for decoration ties the two together: retune the focus ring (as we did, see "Tokens changed") and every badge would change with it. The value is the same as `--accent-1`.
+- **Status colors for `Banner`:** `--bg-surface-*`, `--text-*` and `--border-*` for `success`, `error` and `warning` (nine tokens). `info` reuses the existing info tokens. The Figma has no status colors, so we picked a light fill, a dark text color and a darker border for each, then checked them: text on its fill is 6.9 to 7.8:1 (4.5:1 needed), and the border against the page is at least 3.04:1 (3:1 needed, WCAG 1.4.11). Tailwind maps them as `bg-surface-*`, `text-*` and `border-*`. In the `borderColor` map, `focus` stays last so `border-focus` keeps winning over the other border colors.
 
 ## Card interaction model
 
 - **View mode is read-only.** Clicking a card does nothing; links in the step text still work.
 - **Edit mode:** each card has three controls, drag, edit and delete. Each control does one thing, and all three are buttons, so they work with a mouse, a keyboard and a screen reader.
   - **Clicking the card body does the card's first action, edit.** For keyboard and screen reader users, the edit button is the same action, so the card itself doesn't need to be focusable.
-  - **Editing is inline.** The title becomes an input and the description a textarea. The card shows the focus border while it's open. The edit button becomes a "Save" button with a checkmark; it stays the same element, so keyboard focus doesn't jump. Enter in the title saves, Escape cancels, and either way focus returns to the edit button.
+  - **Editing is inline.** The title becomes an input and the description a textarea. The card shows the focus border while it's open. The edit button becomes a "Save" button with a checkmark; it stays the same element, so keyboard focus doesn't jump. Enter in the title saves, Escape cancels, and either way focus returns to the edit button. While a step is open, a Cancel button (×) replaces Delete. That gives every user a visible way out, not only people who know about Escape, and keeps a destructive button away from Save. Clicking anywhere outside the open card also cancels, and focus goes wherever the user clicked.
   - **There's no "selected" state.** Dragging starts from the grip only, so selecting a card before moving it has no purpose.
+  - **Delete is immediate, with undo instead of a confirm dialog.** The Figma doesn't cover delete. Authors delete often while they clean up a guide, so a confirmation would slow down the common case, and an undo makes mistakes cheap. A warning `Banner` ("Deleted "…". Undo") appears where the step was, between its old neighbors, and stays until the next delete or "Done editing". It sits inside the next step's list item, not in its own, so screen readers still count only the steps. There's no timer, because a message that disappears on its own is hard for keyboard and screen reader users to reach (WCAG 2.2.1). Focus moves to the delete button of the step that took the deleted one's place (or to the previous step's, if it was the last), and a hidden live region announces "Deleted {title}. N steps." Undo puts the step back at its old position, moves focus to it, and announces "Restored {title}."
 - **What it costs:**
-  - Only one step can be edited at a time. Opening another step, or clicking "Done editing", throws away unsaved text in the open fields.
+  - Only one step can be edited at a time. Opening another step, clicking outside the open card, deleting any step, or clicking "Done editing" throws away unsaved text in the open fields, with no warning. Many editors save on an outside click instead; we chose cancel so nothing changes unless the author says so.
   - The card has no Tab stop of its own. Keyboard users start editing from the edit button, so the click target (the whole card) is bigger than the keyboard target (one button).
   - Links in a step can't be clicked while that step is being edited.
+  - Only the most recent delete can be undone.
 
 ## Tokens changed
 
@@ -81,6 +84,7 @@ These are places where we think the design is wrong rather than just silent. We'
 - `NavigationTop`: the page's top bar with `left` and `right` slots. It renders a `<header>`.
 - `Breadcrumbs`: a `<nav aria-label="Breadcrumb">` containing an `<ol>`. The current page is bold with `aria-current="page"`, and the chevron separators are hidden from screen readers.
 - `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
+- `Banner`: a message in a card-shaped box, with an icon, a title and an optional action. Variants are `info`, `success`, `error` and `warning`. It's at least 48px tall, with 12px/24px padding. Long titles wrap, and the icon and action stay aligned with the first line. It isn't a live region itself; whatever renders it decides how the message gets announced.
 - `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.
 - `Card` padding changed from `px-6 py-5` to `p-4` to match the Figma. Overriding it from `StepCard` with `className` doesn't work: the starter's `cn` doesn't merge conflicting classes, and Tailwind outputs `.p-4` before `.px-6`/`.py-5`, so the base padding always wins.
 

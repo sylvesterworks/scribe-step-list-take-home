@@ -22,19 +22,28 @@
     --text-info: #1d4c6d;
     --text-on-element: rgb(255 255 255 / 0.95);
     --text-placeholder: #8b8f93; /* not in the Figma */
+    --text-success: #1e5631; /* JS added; not in the Figma */
+    --text-error: #8a1c1c; /* JS added; not in the Figma */
+    --text-warning: #6b4e00; /* JS added; not in the Figma */
 
     /* Borders */
     --border-default: #e6e9ec;
-    --border-focus: rgb(80 152 193);
+    --border-focus: rgb(80 152 193);/* JS edited; removed transparency to meet WCAG 2.2 */
     --border-dim: #f0f2f4; /* not in the Figma */
     --border-emphasis: #ccd1d6; /* not in the Figma */
-    --border-info: #5098c1; /* not in the Figma */
+    --border-info: #5098c1; /* JS added; not in the Figma */
+    --border-success: #4a9460; /* JS added; not in the Figma */
+    --border-error: #d05a58; /* JS added; not in the Figma */
+    --border-warning: #a67c0c; /* JS added; not in the Figma */
 
     /* Surfaces */
     --bg-surface-default: #ffffff;
     --bg-surface-dim: #f9fafc;
     --bg-surface-neutral: rgb(20 22 23 / 0.05);
     --bg-surface-info: rgb(80 152 193 / 0.23);
+    --bg-surface-success: #e3f4e8; /* JS added; not in the Figma */
+    --bg-surface-error: #fbe6e6; /* JS added; not in the Figma */
+    --bg-surface-warning: #fdf3d1; /* JS added; not in the Figma */
 
     /* Accents */
     --accent-1: #5098c1;

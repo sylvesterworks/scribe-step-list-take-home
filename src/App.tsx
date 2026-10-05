@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
   closestCenter,
   DndContext,
@@ -26,6 +27,7 @@ import { StepCard } from './components/StepCard';
 import { EditModeContext } from './lib/editMode';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
+import { Banner } from './ui/Banner';
 import { Button } from './ui/Button';
 import { IconLink } from './ui/IconLink';
 
@@ -38,6 +40,10 @@ const BREADCRUMB_ITEMS: Crumb[] = [
   { title: 'How to invite a team member' },
 ];
 
+function stepCountLabel(count: number) {
+  return `${count} ${count === 1 ? 'step' : 'steps'}`;
+}
+
 export default function App() {
   // `savedSteps` is the committed list. While editing, changes go to
   // `draftSteps` and are copied back to `savedSteps` on "Done editing".
@@ -46,6 +52,11 @@ export default function App() {
   const [isEditing, setIsEditing] = useState(false);
   // The one step whose title and description are open as form fields, if any.
   const [editingStepId, setEditingStepId] = useState<string | null>(null);
+  // The most recent delete, kept so it can be undone. Only one level of undo.
+  const [lastDeleted, setLastDeleted] = useState<{ step: Step; index: number } | null>(null);
+  // Text for the visually hidden live region: what screen readers hear after
+  // a delete or undo.
+  const [announcement, setAnnouncement] = useState('');
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -57,6 +68,8 @@ export default function App() {
   function finishEditing() {
     setSavedSteps(draftSteps);
     setEditingStepId(null);
+    setLastDeleted(null);
+    setAnnouncement('');
     setIsEditing(false);
   }
 
@@ -66,7 +79,39 @@ export default function App() {
   }
 
   function deleteStep(id: string) {
-    setDraftSteps((prev) => prev.filter((s) => s.id !== id));
+    const index = draftSteps.findIndex((s) => s.id === id);
+    const step = draftSteps[index];
+    const remaining = draftSteps.filter((s) => s.id !== id);
+    // flushSync applies these updates right away, so the DOM queried below
+    // already shows the shorter list and the Undo banner.
+    flushSync(() => {
+      setDraftSteps(remaining);
+      setLastDeleted({ step, index });
+      // Any delete closes an open edit. An open card shows Cancel instead of
+      // Delete, which would throw off the button positions used below.
+      setEditingStepId(null);
+    });
+    setAnnouncement(`Deleted ${step.title}. ${stepCountLabel(remaining.length)}.`);
+    // The deleted button is gone, so move focus to the delete button that took
+    // its place: the next step's, or the previous step's if it was the last.
+    // With no steps left, the Undo button.
+    const deleteButtons = document.querySelectorAll<HTMLButtonElement>('[data-id="delete-step"]');
+    const target =
+      deleteButtons[Math.min(index, deleteButtons.length - 1)] ??
+      document.querySelector<HTMLButtonElement>('[data-id="undo-delete"]');
+    target?.focus();
+  }
+
+  function undoDelete() {
+    if (!lastDeleted) return;
+    const { step, index } = lastDeleted;
+    flushSync(() => {
+      setDraftSteps((prev) => [...prev.slice(0, index), step, ...prev.slice(index)]);
+      setLastDeleted(null);
+    });
+    setAnnouncement(`Restored ${step.title}.`);
+    // The Undo button is gone with the banner; focus the restored step.
+    document.querySelectorAll<HTMLButtonElement>('[data-id="delete-step"]')[index]?.focus();
   }
 
   // Pointer covers mouse, pen and touch. Keyboard: Space/Enter to pick up,
@@ -121,6 +166,19 @@ export default function App() {
       `Move cancelled. ${titleOf(active.id)} is back at position ${position(active.id)} of ${steps.length}.`,
   };
 
+  // Shown after a delete, in the deleted step's place in the list.
+  const undoBanner = lastDeleted && (
+    <Banner
+      variant="warning"
+      title={`Deleted step with title "${lastDeleted.step.title}".`}
+      action={
+        <Button size="small" data-id="undo-delete" onClick={undoDelete}>
+          Undo
+        </Button>
+      }
+    />
+  );
+
   return (
     <EditModeContext.Provider value={isEditing}>
       <NavigationTop
@@ -148,8 +206,16 @@ export default function App() {
       <PageLayout>
         <PageHeading
           heading="How to invite a team member"
-          description={`${steps.length} ${steps.length === 1 ? 'step' : 'steps'}`}
+          description={stepCountLabel(steps.length)}
         />
+
+        {/* `sr-only` hides this visually and positions it absolutely, so it
+            doesn't take a slot in the page's 32px gap. */}
+        <p role="status" className="sr-only">
+          {announcement}
+        </p>
+        {/* Every step deleted: no list item to hold the banner. */}
+        {steps.length === 0 && undoBanner}
 
         <DndContext
           sensors={sensors}
@@ -160,7 +226,13 @@ export default function App() {
           <SortableContext items={steps} strategy={verticalListSortingStrategy}>
             <StepList>
               {steps.map((step, i) => (
-                <li key={step.id}>
+                // The Undo banner sits where the deleted step was: above the
+                // step that took its place, or below the last step if the
+                // deleted one was last. It goes inside an existing <li>, not
+                // its own, so screen readers' item count and positions stay
+                // right. `gap-8` spaces it like the cards.
+                <li key={step.id} className="flex flex-col gap-8">
+                  {lastDeleted?.index === i && undoBanner}
                   <StepCard
                     step={step}
                     index={i}
@@ -170,6 +242,7 @@ export default function App() {
                     onCancel={() => setEditingStepId(null)}
                     onDelete={deleteStep}
                   />
+                  {lastDeleted?.index === steps.length && i === steps.length - 1 && undoBanner}
                 </li>
               ))}
             </StepList>

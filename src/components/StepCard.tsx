@@ -1,7 +1,14 @@
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { faCheck, faGripVertical, faLock, faPencil, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheck,
+  faGripVertical,
+  faLock,
+  faPencil,
+  faTrashCan,
+  faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { cn } from '../lib/cn';
@@ -43,7 +50,7 @@ export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel,
   // (draggable) and nothing can be dropped onto its position (droppable).
   // It must be the object form: `disabled: true` only disables dragging.
   const locked = step.locked ?? false;
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+  const { attributes, listeners, node, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
     useSortable({ id: step.id, disabled: { draggable: locked, droppable: locked } });
 
   // The fields are uncontrolled (they start from `defaultValue`); Save reads
@@ -66,6 +73,18 @@ export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel,
     editButtonRef.current?.focus();
     onCancel();
   }
+
+  // While this step is open, a press anywhere outside the card cancels the
+  // edit. Focus isn't moved back to the edit button here: it goes wherever
+  // the user clicked. `node` is the card's element, from useSortable.
+  useEffect(() => {
+    if (!isEditingStep) return;
+    function handlePointerDown(e: PointerEvent) {
+      if (!node.current?.contains(e.target as Node)) onCancel();
+    }
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [isEditingStep, node, onCancel]);
 
   // Enter in the title saves; Escape in either field cancels.
   function handleFieldKeyDown(e: React.KeyboardEvent) {
@@ -158,15 +177,31 @@ export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel,
                   else onEdit(step.id);
                 }}
               />
-              <IconButton
-                icon={faTrashCan}
-                label={`Delete ${step.title}`}
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(step.id);
-                }}
-              />
+              {/* While editing, Cancel takes Delete's place: a way out that
+                  everyone can see, not just Escape, and no destructive
+                  button next to Save. */}
+              {isEditingStep ? (
+                <IconButton
+                  icon={faXmark}
+                  label="Cancel editing"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cancel();
+                  }}
+                />
+              ) : (
+                <IconButton
+                  data-id="delete-step"
+                  icon={faTrashCan}
+                  label={`Delete ${step.title}`}
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(step.id);
+                  }}
+                />
+              )}
             </div>
           )}
         </div>

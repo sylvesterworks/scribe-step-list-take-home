@@ -27,6 +27,9 @@ export default {
           dim: 'var(--bg-surface-dim)',
           neutral: 'var(--bg-surface-neutral)',
           info: 'var(--bg-surface-info)',
+          success: 'var(--bg-surface-success)',
+          error: 'var(--bg-surface-error)',
+          warning: 'var(--bg-surface-warning)',
         },
         accent: {
           1: 'var(--accent-1)',
@@ -40,6 +43,9 @@ export default {
         default: 'var(--text-default)',
         dim: 'var(--text-dim)',
         info: 'var(--text-info)',
+        success: 'var(--text-success)',
+        error: 'var(--text-error)',
+        warning: 'var(--text-warning)',
         placeholder: 'var(--text-placeholder)',
         'on-element': 'var(--text-on-element)',
       },
@@ -47,6 +53,12 @@ export default {
         default: 'var(--border-default)',
         dim: 'var(--border-dim)',
         emphasis: 'var(--border-emphasis)',
+        info: 'var(--border-info)',
+        success: 'var(--border-success)',
+        error: 'var(--border-error)',
+        warning: 'var(--border-warning)',
+        // Keep `focus` last: Tailwind emits these in this order, so a
+        // `border-focus` added on top of another border color wins.
         focus: 'var(--border-focus)',
       },
       outlineColor: {

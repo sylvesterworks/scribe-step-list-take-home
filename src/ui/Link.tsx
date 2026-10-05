@@ -40,7 +40,8 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
     >
       {children}
       {/* The icon is aria-hidden, so say it in words for screen readers. */}
-      <FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+      {/* Font Awesome sizes icons in em, so `text-xs` makes this one 12px. */}
+      <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-xs" />
       <span className="sr-only">(opens in a new tab)</span>
     </a>
   ),
