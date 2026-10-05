@@ -17,6 +17,8 @@ export function DragPreview({ number, fromWidth, fromHeight }: Props) {
   return (
     <div
       aria-hidden="true"
+      // The test setup's fake layout finds the preview by this.
+      data-drag-preview
       // Read by the keyframe's `from`.
       style={{ '--drag-from-width': `${fromWidth}px`, '--drag-from-height': `${fromHeight}px` } as React.CSSProperties}
       className="relative flex h-[156px] w-[252px] cursor-grabbing flex-col rounded-xl border border-focus bg-surface-default p-3 shadow-base animate-preview-shrink motion-reduce:animate-none"

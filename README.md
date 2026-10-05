@@ -5,7 +5,7 @@ pnpm install
 pnpm dev
 ```
 
-Then open **http://127.0.0.1:5180**. `pnpm typecheck` runs TypeScript.
+Then open **http://127.0.0.1:5180**. `pnpm typecheck` runs TypeScript, and `pnpm test` runs the tests.
 
 > Use `127.0.0.1`, not `localhost`. On macOS `localhost` resolves to IPv6 first, and if anything else is bound to `[::1]` on the same port you get a blank page instead of this app. Each app here has its own port and will fail loudly rather than silently moving to another one.
 
@@ -83,6 +83,7 @@ Your task is in the brief you were sent, not in this file.
 - **Locked steps.** The fixture locks step 1, and the brief only says a locked step "cannot move". We went further: **nothing crosses a locked step.** Locked steps split the list into sections, and a step can only move within its own section (`lib/reorderRange.ts`). The rule is applied in collision detection, so the drop target never appears across a lock, for pointer or keyboard, and again in `handleDragEnd` as a guard. The lock shows as a disabled control (`aria-disabled`, dimmed like the one-step grip), so it doesn't look as usable as a drag handle. It stays in the Tab order so keyboard and screen reader users can find it and hear why the step can't move.
   - **Locked means "can't be reordered", nothing more.** That's how the starter's `Step` type defines it. A locked step can still be edited and deleted, and Undo brings it back at its old position, still locked.
   - **The first step stays pinned.** The starter's data calls step 1 "the guide's entry point", pinned in place. If the locked first step is deleted, then on "Done editing" whichever step is now first takes over the lock. This happens at save rather than at delete, so Undo works normally, and the author can drag a different step to the top before saving.
+- **Tests.** The starter had no test runner. We added Vitest with React Testing Library (`src/App.test.tsx`), testing at the `App` level, the way a user would use it: view and edit mode, inline editing, keyboard reordering with its announcement, Escape, "Done editing" keeping the order, locked steps (first and middle), delete and undo with focus, and the empty and one-step lists. jsdom has no layout, so `src/test/setup.ts` gives the step cards and the drag preview a fake one; that's what lets dnd-kit's keyboard reordering run in tests. Pointer and touch dragging, and the animations, are checked by hand in a browser.
 
 ## Design questions for the design team
 
