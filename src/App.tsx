@@ -11,6 +11,7 @@ import {
   type Announcements,
   type DragEndEvent,
   type DragStartEvent,
+  type DropAnimation,
   type UniqueIdentifier,
 } from '@dnd-kit/core';
 import {
@@ -22,7 +23,6 @@ import {
 
 import { Breadcrumbs, type Crumb } from './ui/Breadcrumbs';
 import { DragPreview } from './components/DragPreview';
-import { PageFooter } from './components/PageFooter';
 import { PageHeading } from './components/PageHeading';
 import { NavigationTop } from './ui/NavigationTop';
 import { PageLayout } from './components/PageLayout';
@@ -34,7 +34,6 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { Banner } from './ui/Banner';
 import { Button } from './ui/Button';
 import { IconLink } from './ui/IconLink';
-import { Switch } from './ui/Switch';
 
 import { steps as initialSteps, type Step } from './data/steps';
 
@@ -62,15 +61,16 @@ export default function App() {
   // Text for the visually hidden live region: what screen readers hear after
   // a delete or undo.
   const [announcement, setAnnouncement] = useState('');
-  // Footer switch: use the Figma's drag visuals (a small preview follows the
-  // pointer, a "Drop step here" box marks the landing spot) or move the card.
-  const [useDesignDragPreview, setUseDesignDragPreview] = useState(true);
-  // The step being dragged right now, and whether the drag started from the
-  // keyboard. Keyboard drags always move the real card.
-  const [activeDrag, setActiveDrag] = useState<{ id: UniqueIdentifier; byKeyboard: boolean } | null>(
-    null,
-  );
-  const showDragPreview = useDesignDragPreview && activeDrag !== null && !activeDrag.byKeyboard;
+  // The step being dragged, and its card's size when it was picked up, so the
+  // drag preview can start at that size and shrink (the "lift").
+  const [activeDrag, setActiveDrag] = useState<{
+    id: UniqueIdentifier;
+    width: number;
+    height: number;
+  } | null>(null);
+  // The step that was just dropped. Its card plays the expand animation (the
+  // "drop"), then clears this.
+  const [justDroppedId, setJustDroppedId] = useState<UniqueIdentifier | null>(null);
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -135,14 +135,24 @@ export default function App() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  function handleDragStart({ active, activatorEvent }: DragStartEvent) {
-    // `activatorEvent` is the event that started the drag: a KeyboardEvent
-    // for Space/Enter on the grip, a PointerEvent for mouse or touch.
-    setActiveDrag({ id: active.id, byKeyboard: activatorEvent instanceof KeyboardEvent });
+  function handleDragStart({ active }: DragStartEvent) {
+    // Measure the card now: once the drag state renders, it shrinks to the
+    // 64px drop slot. (dnd-kit's own `active.rect` isn't filled in yet here.)
+    const card = document.querySelector(`[data-step-id="${active.id}"]`);
+    const rect = card?.getBoundingClientRect();
+    setActiveDrag({ id: active.id, width: rect?.width ?? 0, height: rect?.height ?? 0 });
+  }
+
+  // Dropped or cancelled (Escape): either way the card expands back into
+  // place. With reduced motion there's no expand to play (and no
+  // animationend to clear it), so don't set it.
+  function endDrag(id: UniqueIdentifier) {
+    setActiveDrag(null);
+    if (!prefersReducedMotion) setJustDroppedId(id);
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
-    setActiveDrag(null);
+    endDrag(active.id);
     if (!over || active.id === over.id) return;
     setDraftSteps((prev) => {
       const from = prev.findIndex((s) => s.id === active.id);
@@ -186,6 +196,24 @@ export default function App() {
     onDragCancel: ({ active }) =>
       `Move cancelled. ${titleOf(active.id)} is back at position ${position(active.id)} of ${steps.length}.`,
   };
+
+  // On drop, dnd-kit slides the preview into the card's top-left corner while
+  // the card expands out of it (StepCard's `animate-card-expand`).
+  // - Duration and easing come from the motion tokens. dnd-kit animates with
+  //   the Web Animations API, which can't read var(), so read the values here.
+  // - `sideEffects: null`: by default dnd-kit hides the card until the slide
+  //   ends, which would hide the expand.
+  // - Reduced motion: no slide, the preview just disappears. Dragging and
+  //   dropping work the same.
+  const rootStyle = getComputedStyle(document.documentElement);
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const dropAnimation: DropAnimation | null = prefersReducedMotion
+    ? null
+    : {
+        duration: parseFloat(rootStyle.getPropertyValue('--duration-base')),
+        easing: rootStyle.getPropertyValue('--ease-standard').trim(),
+        sideEffects: null,
+      };
 
   // Shown after a delete, in the deleted step's place in the list.
   const undoBanner = lastDeleted && (
@@ -249,7 +277,7 @@ export default function App() {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onDragCancel={() => setActiveDrag(null)}
+            onDragCancel={({ active }) => endDrag(active.id)}
             accessibility={{ announcements }}
           >
             <SortableContext items={steps} strategy={verticalListSortingStrategy}>
@@ -266,7 +294,8 @@ export default function App() {
                       step={step}
                       index={i}
                       canReorder={steps.length > 1}
-                      showDropTarget={showDragPreview}
+                      isJustDropped={step.id === justDroppedId}
+                      onDropAnimationEnd={() => setJustDroppedId(null)}
                       isEditingStep={step.id === editingStepId}
                       onEdit={setEditingStepId}
                       onSave={saveStep}
@@ -278,22 +307,20 @@ export default function App() {
                 ))}
               </StepList>
             </SortableContext>
-            {/* What follows the pointer. Rendered outside the list, so it
-                floats above everything. Empty for keyboard drags and when
-                the design preview is switched off: the real card moves. */}
-            <DragOverlay>
-              {showDragPreview && <DragPreview number={position(activeDrag.id)} />}
+            {/* What follows the pointer or the arrow keys. Rendered outside
+                the list, so it floats above everything. */}
+            <DragOverlay dropAnimation={dropAnimation}>
+              {activeDrag && (
+                <DragPreview
+                  number={position(activeDrag.id)}
+                  fromWidth={activeDrag.width}
+                  fromHeight={activeDrag.height}
+                />
+              )}
             </DragOverlay>
           </DndContext>
         )}
       </PageLayout>
-      <PageFooter>
-        <Switch
-          label="Design drag preview"
-          checked={useDesignDragPreview}
-          onChange={setUseDesignDragPreview}
-        />
-      </PageFooter>
     </EditModeContext.Provider>
   );
 }

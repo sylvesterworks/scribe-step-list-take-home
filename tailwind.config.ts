@@ -86,6 +86,25 @@ export default {
         fast: 'var(--duration-fast)',
         base: 'var(--duration-base)',
       },
+      // Lift and drop. Each keyframe gives only a `from`, so the animation
+      // ends at the element's own styles.
+      keyframes: {
+        // The drag preview starts at the grabbed card's size (CSS variables
+        // set by DragPreview) and shrinks to its own 252x156.
+        'preview-shrink': {
+          from: { width: 'var(--drag-from-width)', height: 'var(--drag-from-height)' },
+        },
+        // The dropped card starts clipped to the preview's 252x156 at its
+        // top-left corner and grows to full size. Clipping, not scaling, so
+        // the text never stretches.
+        'card-expand': {
+          from: { clipPath: 'inset(0 calc(100% - 252px) calc(100% - 156px) 0 round 0.75rem)' },
+        },
+      },
+      animation: {
+        'preview-shrink': 'preview-shrink var(--duration-base) var(--ease-entrance)',
+        'card-expand': 'card-expand var(--duration-base) var(--ease-entrance)',
+      },
     },
   },
   plugins: [],

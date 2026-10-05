@@ -27,11 +27,9 @@ type Props = {
   index: number;
   /** False when the list has only one step, so there's nothing to reorder. */
   canReorder: boolean;
-  /**
-   * True during a mouse/touch drag with the design's drag preview on. The
-   * dragged card then shows as a "Drop step here" box where it would land.
-   */
-  showDropTarget: boolean;
+  /** True right after this step is dropped: the card plays its expand. */
+  isJustDropped: boolean;
+  onDropAnimationEnd: () => void;
   /** True while this step's title and description are open as form fields. */
   isEditingStep: boolean;
   onEdit: (id: string) => void;
@@ -53,7 +51,8 @@ export function StepCard({
   step,
   index,
   canReorder,
-  showDropTarget,
+  isJustDropped,
+  onDropAnimationEnd,
   isEditingStep,
   onEdit,
   onSave,
@@ -119,6 +118,8 @@ export function StepCard({
     <Card
       ref={setNodeRef}
       data-id="step-card"
+      // App measures the card by this when a drag starts.
+      data-step-id={step.id}
       // `relative` so the drag handle can be positioned against the card.
       // Focus: border turns focus-colored when anything inside has keyboard
       // focus (`:has(:focus-visible)`, so mouse clicks don't trigger it).
@@ -130,20 +131,26 @@ export function StepCard({
         // Hover, only at rest (edit mode, not open, not dragging): a click
         // here opens the step, so hint at it. Added only at rest because
         // Tailwind emits `hover:` after `border-focus`, so it would otherwise
-        // override the editing/dragging border. Keyboard focus inside still
-        // wins, border and shadow: `has-[:focus-visible]` comes after `hover:`.
+        // override the editing border. Keyboard focus inside still wins,
+        // border and shadow: `has-[:focus-visible]` comes after `hover:`.
         isEditing &&
           !isEditingStep &&
           !isDragging &&
           'hover:border-emphasis hover:shadow-base has-[:focus-visible]:shadow-none',
-        (isEditingStep || isDragging) && 'border-focus',
-        isDragging && 'z-10',
-        // Drop target: hide the card and shrink its slot to 64px; the dashed
-        // box below fills it. dnd-kit notices the new height and shifts the
-        // other cards by 64px, so the 32px gaps hold during the drag.
-        isDragging && showDropTarget && 'invisible max-h-16',
+        isEditingStep && 'border-focus',
+        // While dragging, the preview follows the pointer and this card is
+        // the drop target: hidden, with its slot shrunk to 64px; the dashed
+        // banner below fills it. dnd-kit notices the new height and shifts
+        // the other cards by 64px, so the 32px gaps hold during the drag.
+        isDragging && 'invisible max-h-16',
+        // Just dropped: grow out of the preview's size (tailwind.config.ts).
+        isJustDropped && 'animate-card-expand motion-reduce:animate-none',
       )}
       style={{ transform: CSS.Translate.toString(transform), transition }}
+      onAnimationEnd={(e) => {
+        // Only the card's own expand, not animations bubbling up from inside.
+        if (e.target === e.currentTarget) onDropAnimationEnd();
+      }}
       onClick={(e) => {
         // In edit mode, clicking the card does its first action: edit.
         // In view mode a click does nothing.
@@ -253,7 +260,7 @@ export function StepCard({
         )}
       </div>
       <Screenshot hue={step.hue} />
-      {isDragging && showDropTarget && (
+      {isDragging && (
         // `visible` overrides the card's `invisible` for this banner only. It
         // covers the (now 64px) card exactly; `-inset-px` reaches over its
         // 1px border. `items-center` beats Banner's `items-start` because
