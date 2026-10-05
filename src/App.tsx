@@ -214,40 +214,48 @@ export default function App() {
         <p role="status" className="sr-only">
           {announcement}
         </p>
-        {/* Every step deleted: no list item to hold the banner. */}
-        {steps.length === 0 && undoBanner}
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          accessibility={{ announcements }}
-        >
-          <SortableContext items={steps} strategy={verticalListSortingStrategy}>
-            <StepList>
-              {steps.map((step, i) => (
-                // The Undo banner sits where the deleted step was: above the
-                // step that took its place, or below the last step if the
-                // deleted one was last. It goes inside an existing <li>, not
-                // its own, so screen readers' item count and positions stay
-                // right. `gap-8` spaces it like the cards.
-                <li key={step.id} className="flex flex-col gap-8">
-                  {lastDeleted?.index === i && undoBanner}
-                  <StepCard
-                    step={step}
-                    index={i}
-                    isEditingStep={step.id === editingStepId}
-                    onEdit={setEditingStepId}
-                    onSave={saveStep}
-                    onCancel={() => setEditingStepId(null)}
-                    onDelete={deleteStep}
-                  />
-                  {lastDeleted?.index === steps.length && i === steps.length - 1 && undoBanner}
-                </li>
-              ))}
-            </StepList>
-          </SortableContext>
-        </DndContext>
+        {steps.length === 0 ? (
+          // Empty list: a message instead of an empty <ol>, which screen
+          // readers would announce as "list, 0 items". The Undo banner (edit
+          // mode, right after deleting the last step) sits above it.
+          <>
+            {undoBanner}
+            <Banner variant="info" title="This guide has no steps yet." />
+          </>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+            accessibility={{ announcements }}
+          >
+            <SortableContext items={steps} strategy={verticalListSortingStrategy}>
+              <StepList>
+                {steps.map((step, i) => (
+                  // The Undo banner sits where the deleted step was: above the
+                  // step that took its place, or below the last step if the
+                  // deleted one was last. It goes inside an existing <li>, not
+                  // its own, so screen readers' item count and positions stay
+                  // right. `gap-8` spaces it like the cards.
+                  <li key={step.id} className="flex flex-col gap-8">
+                    {lastDeleted?.index === i && undoBanner}
+                    <StepCard
+                      step={step}
+                      index={i}
+                      canReorder={steps.length > 1}
+                      isEditingStep={step.id === editingStepId}
+                      onEdit={setEditingStepId}
+                      onSave={saveStep}
+                      onCancel={() => setEditingStepId(null)}
+                      onDelete={deleteStep}
+                    />
+                    {lastDeleted?.index === steps.length && i === steps.length - 1 && undoBanner}
+                  </li>
+                ))}
+              </StepList>
+            </SortableContext>
+          </DndContext>
+        )}
       </PageLayout>
     </EditModeContext.Provider>
   );

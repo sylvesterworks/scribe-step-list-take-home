@@ -24,6 +24,8 @@ import type { Step } from '../data/steps';
 type Props = {
   step: Step;
   index: number;
+  /** False when the list has only one step, so there's nothing to reorder. */
+  canReorder: boolean;
   /** True while this step's title and description are open as form fields. */
   isEditingStep: boolean;
   onEdit: (id: string) => void;
@@ -41,7 +43,7 @@ const FIELD_CLASS =
 /**
  * The card as it exists today. It is not styled and it is not finished.
  */
-export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel, onDelete }: Props) {
+export function StepCard({ step, index, canReorder, isEditingStep, onEdit, onSave, onCancel, onDelete }: Props) {
   // Drag, edit and delete only work in edit mode.
   const isEditing = useContext(EditModeContext);
 
@@ -50,8 +52,10 @@ export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel,
   // (draggable) and nothing can be dropped onto its position (droppable).
   // It must be the object form: `disabled: true` only disables dragging.
   const locked = step.locked ?? false;
+  // With only one step there's nowhere to move it. Disabling `draggable` makes
+  // dnd-kit drop the grip's listeners and set aria-disabled on it.
   const { attributes, listeners, node, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
-    useSortable({ id: step.id, disabled: { draggable: locked, droppable: locked } });
+    useSortable({ id: step.id, disabled: { draggable: locked || !canReorder, droppable: locked } });
 
   // The fields are uncontrolled (they start from `defaultValue`); Save reads
   // them through these refs.
@@ -138,7 +142,8 @@ export function StepCard({ step, index, isEditingStep, onEdit, onSave, onCancel,
               variant="ghost"
               // `touch-none` stops the browser scrolling the page when a
               // finger drags the grip, so touch reaches dnd-kit instead.
-              className="touch-none"
+              // Dimmed when dnd-kit marks it aria-disabled (one-step list).
+              className="touch-none aria-disabled:opacity-50"
               {...attributes}
               {...listeners}
             />
