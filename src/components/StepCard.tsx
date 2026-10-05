@@ -9,7 +9,6 @@ import {
   faTrashCan,
   faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { cn } from '../lib/cn';
 import { EditModeContext } from '../lib/editMode';
@@ -184,7 +183,17 @@ export function StepCard({
           onClick={(e) => e.stopPropagation()}
         >
           {step.locked ? (
-            <FontAwesomeIcon icon={faLock} className="text-dim" title="Locked: this step can't be moved" />
+            // Shown as a disabled control, dimmed like the one-step grip, so
+            // it doesn't look as usable as a drag handle. aria-disabled (not
+            // `disabled`) keeps it in the Tab order: keyboard and screen
+            // reader users can find it and hear why the step can't move.
+            <IconButton
+              icon={faLock}
+              label="Locked: this step can't be moved"
+              variant="ghost"
+              aria-disabled
+              className="aria-disabled:opacity-50"
+            />
           ) : (
             <IconButton
               ref={setActivatorNodeRef}

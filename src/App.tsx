@@ -9,6 +9,7 @@ import {
   useSensor,
   useSensors,
   type Announcements,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
   type DropAnimation,
@@ -29,13 +30,14 @@ import { PageLayout } from './components/PageLayout';
 import { StepList } from './components/StepList';
 import { StepCard } from './components/StepCard';
 import { EditModeContext } from './lib/editMode';
+import { reorderRange } from './lib/reorderRange';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 import { Banner } from './ui/Banner';
 import { Button } from './ui/Button';
 import { IconLink } from './ui/IconLink';
 
-import { steps as initialSteps, type Step } from './data/steps';
+import { steps as fixtureSteps, type Step } from './data/steps';
 
 // The last crumb is the current page, so it has no url.
 const BREADCRUMB_ITEMS: Crumb[] = [
@@ -48,7 +50,9 @@ function stepCountLabel(count: number) {
   return `${count} ${count === 1 ? 'step' : 'steps'}`;
 }
 
-export default function App() {
+// `initialSteps` defaults to the 40 fixture steps; tests pass their own (an
+// empty list, one step, a locked step in the middle).
+export default function App({ initialSteps = fixtureSteps }: { initialSteps?: Step[] }) {
   // `savedSteps` is the committed list. While editing, changes go to
   // `draftSteps` and are copied back to `savedSteps` on "Done editing".
   const [savedSteps, setSavedSteps] = useState<Step[]>(initialSteps);
@@ -85,7 +89,17 @@ export default function App() {
   }
 
   function finishEditing() {
-    setSavedSteps(draftSteps);
+    // The first step is the guide's entry point and is pinned (see
+    // data/steps.ts). If the locked first step was deleted, the step that's
+    // first now takes over the lock. Done at save, not at delete, so Undo
+    // works normally and the author can drag a different step to the top first.
+    const oldFirst = savedSteps[0];
+    const oldFirstDeleted = oldFirst?.locked && !draftSteps.some((s) => s.id === oldFirst.id);
+    if (oldFirstDeleted && draftSteps.length > 0) {
+      setSavedSteps([{ ...draftSteps[0], locked: true }, ...draftSteps.slice(1)]);
+    } else {
+      setSavedSteps(draftSteps);
+    }
     setEditingStepId(null);
     setLastDeleted(null);
     setAnnouncement('');
@@ -162,9 +176,26 @@ export default function App() {
     setDraftSteps((prev) => {
       const from = prev.findIndex((s) => s.id === active.id);
       const to = prev.findIndex((s) => s.id === over.id);
+      // Guard: never move a step across a locked one. Collision detection
+      // below already keeps `over` inside the range; this makes sure.
+      const [start, end] = reorderRange(prev, from);
+      if (to < start || to > end) return prev;
       return arrayMove(prev, from, to);
     });
   }
+
+  // dnd-kit's closestCenter, limited to the dragged step's own section (see
+  // reorderRange). The drop target can't appear across a locked step, for
+  // pointer or keyboard.
+  const collisionDetection: CollisionDetection = (args) => {
+    const from = steps.findIndex((s) => s.id === args.active.id);
+    const [start, end] = reorderRange(steps, from);
+    const allowed = steps.slice(start, end + 1).map((s) => s.id);
+    return closestCenter({
+      ...args,
+      droppableContainers: args.droppableContainers.filter((c) => allowed.includes(String(c.id))),
+    });
+  };
 
   // What screen readers hear while reordering. dnd-kit's defaults read out
   // raw ids ("step-3"), so these use the title and position instead.
@@ -281,7 +312,7 @@ export default function App() {
         ) : (
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={collisionDetection}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDragCancel={({ active }) => endDrag(active.id)}
