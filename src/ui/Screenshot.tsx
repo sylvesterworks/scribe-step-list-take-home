@@ -17,8 +17,10 @@ export function Screenshot({ hue, className }: { hue: number; className?: string
           background: `linear-gradient(135deg, hsl(${hue} 70% 92%), hsl(${(hue + 40) % 360} 65% 84%))`,
         }}
       />
-      <div className='absolute left-4 right-4 top-3.5 h-2 rounded-full bg-black/10 dark:bg-white/10' />
-      <div className='absolute left-4 top-[30px] h-1.5 w-1/3 rounded-full bg-black/[0.07] dark:bg-white/[0.08]' />
+      {/* Fake text lines. No `dark:` variant: a screenshot is a captured
+          image and stays light in both themes, so the lines stay dark too. */}
+      <div className='absolute left-4 right-4 top-3.5 h-2 rounded-full bg-black/10' />
+      <div className='absolute left-4 top-[30px] h-1.5 w-1/3 rounded-full bg-black/[0.07]' />
       <div
         className='absolute rounded-full border-2'
         style={{
