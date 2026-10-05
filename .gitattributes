@@ -1,0 +1,3 @@
+# Text files use LF line endings in the repo and in every checkout, whatever
+# the machine's core.autocrlf says (Git for Windows defaults it to true).
+* text=auto eol=lf
