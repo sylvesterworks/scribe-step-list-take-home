@@ -73,6 +73,7 @@ These UI elements were added assuming they *should* be design-system components.
 - `IconLink`: a link that looks like an `IconButton`; `label` is required.
 - `Link`: a badge-style external link that always opens in a new tab.
 - `Banner`: info, success, error, warning, and drop, with a text message and an optional action button (not in the Figma). Only warning and drop variants are used in this demo, others are specced but not used.
+- `Input` and `Textarea`: text fields for the inline step editing. They share one look (`fieldClassName`): the secondary `Button`'s border and radius, and on focus the border turns `--border-focus`, matching the card. `Input` is 32px tall, like the default `Button`.
 - `Switch`: an on/off setting, with optional side labels. Used for the theme toggle in the footer (not in the Figma).
 - The new tokens (see Tokens) and the `data-theme` dark-mode mechanism.
 

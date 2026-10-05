@@ -16,7 +16,9 @@ import { linkify } from '../lib/linkify';
 import { Banner } from '../ui/Banner';
 import { Card } from '../ui/Card';
 import { IconButton } from '../ui/IconButton';
+import { Input } from '../ui/Input';
 import { Screenshot } from '../ui/Screenshot';
+import { Textarea } from '../ui/Textarea';
 import { StepNumber } from './StepNumber';
 
 import type { Step } from '../data/steps';
@@ -36,12 +38,6 @@ type Props = {
   onCancel: () => void;
   onDelete: (id: string) => void;
 };
-
-// The inline fields borrow the secondary Button's border and radius. On focus
-// they match the card: the 1px border turns `--border-focus`, with no outline.
-const FIELD_CLASS =
-  'w-full rounded-md border border-default bg-surface-default px-3 text-default ' +
-  'focus-visible:border-focus focus-visible:outline-none';
 
 /**
  * This card is the foundation of the step process, with updates to support locked cards, 
@@ -222,14 +218,14 @@ export function StepCard({
               position ("2 of 40"), so reading the number too would repeat it. */}
           <StepNumber aria-hidden="true">{index + 1}</StepNumber>
           {isEditingStep ? (
-            <input
+            <Input
               ref={titleRef}
               // The user just asked to edit, so put them in the title.
               autoFocus
               aria-label="Step title"
               defaultValue={step.title}
               onKeyDown={handleFieldKeyDown}
-              className={cn(FIELD_CLASS, 'h-8 min-w-0 flex-1 font-bold')}
+              className="min-w-0 flex-1 font-bold"
             />
           ) : (
             <h2>{linkify(step.title, 'heading')}</h2>
@@ -280,13 +276,13 @@ export function StepCard({
           )}
         </div>
         {isEditingStep ? (
-          <textarea
+          <Textarea
             ref={descriptionRef}
             aria-label="Step description"
             defaultValue={step.description}
             rows={2}
             onKeyDown={handleFieldKeyDown}
-            className={cn(FIELD_CLASS, 'my-2 block py-1')}
+            className="my-2"
           />
         ) : (
           <p className="py-2">{linkify(step.description, 'body')}</p>
