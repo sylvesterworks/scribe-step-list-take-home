@@ -213,7 +213,9 @@ export function StepCard({
       )}
       <div>
         <div className="flex items-center gap-3">
-          <StepNumber>{index + 1}</StepNumber>
+          {/* Hidden from screen readers: the <ol> already announces the
+              position ("2 of 40"), so reading the number too would repeat it. */}
+          <StepNumber aria-hidden="true">{index + 1}</StepNumber>
           {isEditingStep ? (
             <input
               ref={titleRef}

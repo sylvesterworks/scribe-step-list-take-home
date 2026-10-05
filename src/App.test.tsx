@@ -56,6 +56,12 @@ describe('App: view mode', () => {
     expect(screen.queryByRole('button', { name: /^Reorder/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
   });
+
+  it('hides the visible step number from screen readers (the list gives the position)', () => {
+    setup(makeSteps(3));
+    expect(screen.getByText('2')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(screen.getByRole('main')).getAllByRole('listitem')).toHaveLength(3);
+  });
 });
 
 describe('App: edit mode', () => {
