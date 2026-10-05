@@ -127,6 +127,15 @@ export function StepCard({
       className={cn(
         'relative has-[:focus-visible]:border-focus',
         isEditing && 'cursor-pointer',
+        // Hover, only at rest (edit mode, not open, not dragging): a click
+        // here opens the step, so hint at it. Added only at rest because
+        // Tailwind emits `hover:` after `border-focus`, so it would otherwise
+        // override the editing/dragging border. Keyboard focus inside still
+        // wins, border and shadow: `has-[:focus-visible]` comes after `hover:`.
+        isEditing &&
+          !isEditingStep &&
+          !isDragging &&
+          'hover:border-emphasis hover:shadow-base has-[:focus-visible]:shadow-none',
         (isEditingStep || isDragging) && 'border-focus',
         isDragging && 'z-10',
         // Drop target: hide the card and shrink its slot to 64px; the dashed
