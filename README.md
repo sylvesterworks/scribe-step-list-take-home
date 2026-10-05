@@ -32,9 +32,9 @@ The brief says "the card opens the step". There's no step detail page in this ex
 
 - **Edit controls are always visible in edit mode**, not only on hover as in the Figma. Hover-only controls can't be found by keyboard, screen reader or touch users, and the brief requires anything reachable by mouse to be reachable by keyboard. Cost: a busier edit view. (See design questions.)
 - **Step description.** The Figma's card has no description, but every step has one, so it renders under the title with 8px above and below.
-- **Page side padding is 60px, not 48px**, so the drag handle (centered in a 60×72 box outside the card, level with the step number) never runs off the page.
+- **Page side padding was updated to 60px, not 48px**, so the drag handle (centered in a 60×72 box outside the card, level with the step number) never runs off the page.
 - **Hover** applies only in edit mode, where a click does something, and only to a card at rest: a darker border and a small shadow. It never changes a card that's open, being dragged or has keyboard focus, so focus plus hover looks exactly like focus.
-- **Drag and drop uses the Figma's mock step for every input.** The Figma shows the small preview but not where the step will land.
+- **Drag and drop uses the Figma's dragging visual step for every input.** The Figma shows the small preview but not where the step will land.
   - The grabbed card shrinks into the preview, and its slot becomes a 64px dashed "Drop step here" placeholder that moves to the landing spot.
   - On drop, the preview slides into the slot and the card grows back out of it.
   - Keyboard users get the same visuals plus announcements ("Picked up…", "moved to position 3 of 40", "dropped").
@@ -59,22 +59,22 @@ The brief says "the card opens the step". There's no step detail page in this ex
 - **`Card type="linked"` can never take focus** (no `tabIndex`), and its focus cue is a border shift of 1.26:1.
 - **`Button` uses `font-semibold` (600), but `index.html` only loads 400, 500 and 700.**
 - **`cn` doesn't merge conflicting classes**, so `className` overrides on `ui/` components can silently lose to the base classes (that's why `Card`'s padding was changed in place).
-- **`dark:` variants followed the OS** while the tokens were light-only. They now follow the theme attribute.
 - **`StepCard`** was a clickable `div`, not focusable or announced, with real buttons nested inside it. The drag "button" was the text "drag", with no accessible name and no keyboard behavior.
 - **`App`**: the list wasn't a list, the step count wasn't announced, and delete lost focus.
+- **`dark:` variants followed the OS** while the tokens were light-only. They now follow the theme attribute.
 
 ## What belongs in Stylus vs. stays local
 
 ### New in Stylus (`src/ui/`, tokens in `index.css`):
-These UI elements were added assuming they *should* be design-system components. All components added were built in service of this demo; no Storybook stories or test coverage was added.
+These UI elements were added assuming they *should* be design-system components. All components added were built in service of this demo; no Storybook stories or test coverage were added.
 - `NavigationTop`: the page's top bar.
 - `Breadcrumbs`: the location trail.
-- `IconButton`: a square, icon-only `Button`; `label` is required.
-- `IconLink`: a link that looks like an `IconButton`; `label` is required.
+- `IconButton`: a square, icon-only `Button`; `label` is required and is both its accessible name and its hover tooltip.
+- `IconLink`: a link that looks like an `IconButton`; `label` is required (name and tooltip).
 - `Link`: a badge-style external link that always opens in a new tab.
-- `Banner`: info, success, error, warning, and drop, with a text message and an optional action button (not in the Figma). Only warning and drop variants are used in this demo, others are specced but not used.
-- `Input` and `Textarea`: text fields for the inline step editing. They share one look (`fieldClassName`): the secondary `Button`'s border and radius, and on focus the border turns `--border-focus`, matching the card. `Input` is 32px tall, like the default `Button`.
-- `Switch`: an on/off setting, with optional side labels. Used for the theme toggle in the footer (not in the Figma).
+- `Banner`: info, success, error, warning, and drop `variant`, defaulting to _info_, with a `title` message and an optional `action`. Only warning and drop variants are used in this demo, others are specced but not used. (not in the Figma)
+- `Input` and `Textarea`: text fields for the inline step editing. They share one look (`fieldClassName`): the secondary `Button`'s border and radius, and on focus the border turns `--border-focus`, matching the card. `Input` is 32px tall, like the default `Button`. (not in the Figma)
+- `Switch`: an on/off setting, with optional side labels. Used for the theme toggle in the footer. (not in the Figma)
 - The new tokens (see Tokens) and the `data-theme` dark-mode mechanism.
 
 ### Changed in Stylus:
@@ -82,21 +82,29 @@ These UI elements were added assuming they *should* be design-system components.
 - `Card`: padding from `px-6 py-5` to `p-4`, to match the Figma.
 
 ### On top of dnd-kit:
-dnd-kit stays the engine (sensors, collision, measuring). Stylus would own the parts every sortable list should get right:
+dnd-kit used as the drag-n-drop engine (sensors, collision, measuring). Stylus would own the parts every sortable list should get right:
 - the drag handle (an `IconButton` with a per-item label, a disabled state and a lock state);
 - the drop placeholder (`Banner variant="drop"`);
 - announcement wording and keyboard instructions, written once and localized;
 - the lift, drop and slide motion, including reduced motion;
 - "locked" or "pinned" items as a list-level rule.
 
-### Local to the editor:
-`StepCard`, `StepList`, `DragPreview` (the mock step), `PageHeading`, `PageLayout`, `PageFooter`, `ThemeToggle`, edit-mode context, the draft and undo state in `App`, and `reorderRange` (until locking becomes a Stylus rule).
+### Local to the application:
+- `StepCard`
+- `StepList`
+- `DragPreview` (the mock step)
+- `PageHeading`
+- `PageLayout`
+- `PageFooter`
+- `ThemeToggle`, edit-mode context
+- the draft and undo state in `App`
+- `reorderRange` (until locking becomes a Stylus rule).
 
 ## Tests
 
 The brief didn't ask for tests and the starter had no test runner. I added them anyway (`pnpm test`, Vitest with Testing Library) so the behavior is protected if code changes during the live session: a fix in one place that breaks reordering, locking or undo somewhere else shows up right away.
 
-- 21 tests at the `App` level, written the way a user works: view and edit mode, inline editing, keyboard reordering and its announcement, locked steps (first and middle), delete and undo with focus, the theme toggle, and the empty and one-step lists.
+- 22 tests at the `App` level, written the way a user works: view and edit mode, inline editing, keyboard reordering and its announcement, locked steps (first and middle), delete and undo with focus, the theme toggle, and the empty and one-step lists.
 - 3 unit tests for the locked-section rule (`reorderRange`).
 
 ## What I deliberately chose not to do
@@ -116,6 +124,12 @@ The brief didn't ask for tests and the starter had no test runner. I added them 
 - **Fade the edit controls out**, not only in.
 - **Light / System / Dark**, so a saved choice can go back to following the browser.
 - **Enforce the semantic-only palette.** Move `colors` out of `theme.extend` so Tailwind's raw palette stops compiling, then add the few base colors still needed (`transparent`, and replacements for `Screenshot`'s raw `black` and `white`) as tokens.
+- **Add a `Tooltip` component to Stylus.** Icon-only buttons currently show their label with the native `title` attribute, which is the quick fix: mouse users see what an icon does on hover. Native tooltips have real gaps, though:
+  - They never appear on keyboard focus or on touch, so they only help mouse users.
+  - Their timing and look can't be styled or themed, so they ignore the tokens and dark mode.
+  - Some screen readers read the `title` again after the accessible name ("Delete Step 2, button, Delete Step 2").
+
+  A Stylus `Tooltip` would show on hover *and* focus, follow the tokens in both themes, dismiss with Escape, and be linked with `aria-describedby` (or simply use the `label`) without the duplicate reading. `IconButton` and `IconLink` would use it by default, so every icon control gets it for free.
 - **Playwright tests** for pointer and touch dragging.
 - **Announce blocked moves** ("can't move past a locked step") instead of staying silent.
 - **Build ui/ components properly** with Storybook stories, test coverage and more flexible props; out of scope for this exercise.
