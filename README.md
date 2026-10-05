@@ -1,123 +1,135 @@
-# Scribe — Step List (take-home starter)
+# Scribe step list
+
+Take-home for the Lead Design Engineer role. The visual target is the [Figma](https://www.figma.com/design/qTgJ028iwrvxNk7pl1ikH7/Design-Engineer-Exercise----Candidates-name-?node-id=0-1).
 
 ```bash
 pnpm install
-pnpm dev
+pnpm dev        # http://127.0.0.1:5180 (not localhost, see vite.config.ts)
+pnpm test       # Vitest + Testing Library
+pnpm typecheck
 ```
 
-Then open **http://127.0.0.1:5180**. `pnpm typecheck` runs TypeScript, and `pnpm test` runs the tests.
+Click **Edit** to reorder, edit and delete steps. **Done editing** saves. The footer switches between light and dark.
 
-> Use `127.0.0.1`, not `localhost`. On macOS `localhost` resolves to IPv6 first, and if anything else is bound to `[::1]` on the same port you get a blank page instead of this app. Each app here has its own port and will fail loudly rather than silently moving to another one.
+## The card interaction model
 
-## What's here
-
-```
-src/
-  App.tsx                 the list — plain, unstyled, unfinished
-  components/StepCard.tsx the card as it exists today
-  data/steps.ts           40 steps of fixture data
-  ui/Button.tsx           trimmed Stylus Button
-  ui/Card.tsx             Stylus Card, copied as it ships
-  ui/Screenshot.tsx       stands in for the step screenshot
-  index.css               Stylus token subset — light only, and not complete
-```
-
-**The visual target is the [Figma](https://www.figma.com/design/qTgJ028iwrvxNk7pl1ikH7/Design-Engineer-Exercise----Candidates-name-?node-id=0-1)**, linked from your brief as well. There's no reference page in this repo — the file is the spec.
-
-`tailwind.config.ts` exposes **semantic utilities only** — `bg-surface-default`, `text-dim`, `border-emphasis`. The raw palette is not available, so `bg-slate-800` will not work. That's on purpose.
-
-**`index.css` is a subset, not the whole collection.** If the design needs a value that isn't in there, take it from the design file, add it under the same name, and say why in your README.
-
-## Notes
-
-- Nothing here is sacred. If a file is wrong, change it — including the ones in `ui/`.
-- Adding a dependency is fine.
-
-Your task is in the brief you were sent, not in this file.
-
-## Tokens added
-
-- `--width-content: 720px` (Tailwind: `max-w-content`). The width of the page's content column in the Figma. Tailwind's nearest step is `max-w-3xl` (768px), so matching the design would otherwise mean a hard-coded `max-w-[720px]`. A raw value like that can drift from the design without anyone noticing. As a token, the column width has a name, lives in one place, and every page that uses it changes together.
-- `--border-info: #5098c1`, the stroke of the `Link` badge. The info family already had `--text-info` and `--bg-surface-info` but no border. The closest existing color was `--border-focus`, but using the focus-ring token for decoration ties the two together: retune the focus ring (as we did, see "Tokens changed") and every badge would change with it. The value is the same as `--accent-1`.
-- **Status colors for `Banner`:** `--bg-surface-*`, `--text-*` and `--border-*` for `success`, `error` and `warning` (nine tokens). `info` reuses the existing info tokens. The Figma has no status colors, so we picked a light fill, a dark text color and a darker border for each, then checked them: text on its fill is 6.9 to 7.8:1 (4.5:1 needed), and the border against the page is at least 3.04:1 (3:1 needed, WCAG 1.4.11). Tailwind maps them as `bg-surface-*`, `text-*` and `border-*`. In the `borderColor` map, `focus` stays last so `border-focus` keeps winning over the other border colors.
-
-## Card interaction model
+The brief says "the card opens the step". There's no step detail page in this exercise, so I read "open" as "open for editing" and made that the card's one action.
 
 - **View mode is read-only.** Clicking a card does nothing; links in the step text still work.
-- **Edit mode:** each card has three controls, drag, edit and delete. Each control does one thing, and all three are buttons, so they work with a mouse, a keyboard and a screen reader.
-  - **Clicking the card body does the card's first action, edit.** For keyboard and screen reader users, the edit button is the same action, so the card itself doesn't need to be focusable.
-  - **Editing is inline.** The title becomes an input and the description a textarea. The card shows the focus border while it's open. The edit button becomes a "Save" button with a checkmark; it stays the same element, so keyboard focus doesn't jump. Enter in the title saves, Escape cancels, and either way focus returns to the edit button. While a step is open, a Cancel button (×) replaces Delete. That gives every user a visible way out, not only people who know about Escape, and keeps a destructive button away from Save. Clicking anywhere outside the open card also cancels, and focus goes wherever the user clicked.
-  - **There's no "selected" state.** Dragging starts from the grip only, so selecting a card before moving it has no purpose.
-  - **Delete is immediate, with undo instead of a confirm dialog.** The Figma doesn't cover delete. Authors delete often while they clean up a guide, so a confirmation would slow down the common case, and an undo makes mistakes cheap. A warning `Banner` ("Deleted "…". Undo") appears where the step was, between its old neighbors, and stays until the next delete or "Done editing". It sits inside the next step's list item, not in its own, so screen readers still count only the steps. There's no timer, because a message that disappears on its own is hard for keyboard and screen reader users to reach (WCAG 2.2.1). Focus moves to the delete button of the step that took the deleted one's place (or to the previous step's, if it was the last), and a hidden live region announces "Deleted {title}. N steps." Undo puts the step back at its old position, moves focus to it, and announces "Restored {title}."
-- **What it costs:**
-  - Only one step can be edited at a time. Opening another step, clicking outside the open card, deleting any step, or clicking "Done editing" throws away unsaved text in the open fields, with no warning. Many editors save on an outside click instead; we chose cancel so nothing changes unless the author says so.
-  - The card has no Tab stop of its own. Keyboard users start editing from the edit button, so the click target (the whole card) is bigger than the keyboard target (one button).
-  - Links in a step can't be clicked while that step is being edited.
-  - Only the most recent delete can be undone.
+- **Edit mode** gives each card three buttons: drag, edit and delete. Each does one thing, and all three work with a mouse, a keyboard and a screen reader.
+- **Clicking the card body edits it**, the same as the edit button. Keyboard and screen reader users use the button, so the card itself isn't focusable.
+- **Editing is inline.** The title and description become fields. Edit becomes Save (same button, so focus stays put) and Delete becomes Cancel. Enter saves, Escape or a click outside cancels.
+- **No "selected" state.** Dragging starts from the grip only, so selecting first has no purpose.
+- **Delete is immediate, with Undo, not a confirm dialog.** Authors delete often while cleaning up a guide; a dialog slows the common case and Undo makes mistakes cheap. A warning banner with Undo appears where the step was and stays until the next delete or Done editing. It has no timer, since a message that disappears is hard to reach by keyboard or screen reader (WCAG 2.2.1). Focus moves to the next step's delete button, and the change is announced.
 
-## Tokens changed
+### What it costs:
+- One step can be edited at a time. Opening another step, clicking outside, deleting, or Done editing discards unsaved text without warning. I chose cancel over auto-save so nothing changes unless the author says so.
+- The click target (the whole card) is bigger than the keyboard target (one button).
+- Links in a step can't be clicked while it's being edited.
+- Only the last delete can be undone.
 
-- `--border-focus`: from `rgb(80 152 193 / 0.67)` to solid `rgb(80 152 193)`. At 67% opacity the focus ring was 2.09:1 against white and 2.03:1 against the page background, below the 3:1 minimum for focus indicators (WCAG 1.4.11). The lowest opacity that passes on the page background is 0.99, so we made it solid: 3.18:1 on white and 3.05:1 on `--bg-surface-dim`. That margin is thin. A slightly darker blue would give more room, but that's a change to the brand color, which is a decision for design.
-- `--border-focus` (dark): the Figma's dark value is `rgb(80 152 193 / 0.51)`, which is 2.39:1 on dark cards and 2.28:1 on the dark page, the same failure as light. Solid `rgb(80 152 193)` gives 5.71:1 and 4.90:1.
+## Where the Figma was silent: decisions
 
-## Where we went beyond the Figma
+- **Edit controls are always visible in edit mode**, not only on hover as in the Figma. Hover-only controls can't be found by keyboard, screen reader or touch users, and the brief requires anything reachable by mouse to be reachable by keyboard. Cost: a busier edit view. (See design questions.)
+- **Step description.** The Figma's card has no description, but every step has one, so it renders under the title with 8px above and below.
+- **Page side padding is 60px, not 48px**, so the drag handle (centered in a 60×72 box outside the card, level with the step number) never runs off the page.
+- **Hover** applies only in edit mode, where a click does something, and only to a card at rest: a darker border and a small shadow. It never changes a card that's open, being dragged or has keyboard focus, so focus plus hover looks exactly like focus.
+- **Drag and drop uses the Figma's mock step for every input.** The Figma shows the small preview but not where the step will land.
+  - The grabbed card shrinks into the preview, and its slot becomes a 64px dashed "Drop step here" placeholder that moves to the landing spot.
+  - On drop, the preview slides into the slot and the card grows back out of it.
+  - Keyboard users get the same visuals plus announcements ("Picked up…", "moved to position 3 of 40", "dropped").
+  - I first built a version where the real card moves and kept a switch to compare. Once lift and drop were animated, the design's version told the story better, so I kept one model rather than two code paths.
+- **Locked steps: nothing crosses a lock.** The brief says a locked step "cannot move". I went further: locked steps split the list into sections and a step only moves within its own, so a lock in the middle of the list also holds (the fixture only locks step 1).
+  - The lock is a disabled control (dimmed, still focusable) so it doesn't look as usable as a grip, and screen reader users can find it and hear why.
+  - Locked means "can't be reordered", as the starter's `Step` type says. It can still be edited and deleted.
+  - Step 1 is "the guide's entry point" (starter data). If the locked first step is deleted, the new first step takes over the lock on _Done editing_. That happens at save, so _Undo_ works and the author can choose the new first step.
+- **One-step list.** The grip stays visible but disabled, so the layout matches a longer list.
+- **Empty list.** An info banner, "This guide has no steps yet.", instead of an empty list (screen readers would say "list, 0 items"). No "Add step", since adding isn't part of the exercise.
+- **Motion**, all from the motion tokens:
+  - Controls and the Undo banner fade in over 120ms on `--ease-standard`, as the brief asks.
+  - Steps making room slide on 200ms `--ease-standard`: smooth, no bounce.
+  - Lift and drop use `--ease-entrance`, fast then settling. The slot collapses and grows with it, so the list glides instead of jumping.
+  - Reduced motion turns every animation off; reordering, editing, undo and announcements all still work.
+- **Dark mode.** A Light / Dark switch in the footer. It follows the browser's setting until the user flips it; the choice is saved and survives a refresh. Values come from the Figma's dark mode where it has them. A shadow barely shows on dark, so lift relies on the preview's focus-colored outline instead.
 
-- **Step description.** The Figma's card has no description text, but every fixture step has one, so we render it under the title. Its spacing is our call: 8px above and below (`py-2`) separates it from the title row and keeps it off the screenshot.
-- **Page side padding is 60px, not 48px.** In edit mode the drag handle sits outside the card, centered in a 60×72 box so that it lines up with the step number. The design's 48px side padding doesn't leave room for that box, so on narrow windows the handle would overflow off the page. The page's left and right padding is 60px so the handle always fits. Top and bottom stay at 48px. The design doesn't cover this case.
+## What's wrong in the starter
 
-- **Card hover.** Only in edit mode, where clicking a card opens it, and only when the card is at rest: the border darkens to `--border-emphasis` and a small `shadow-base` appears. Hover never changes a card that is open for editing, being dragged, or has keyboard focus inside it, so focus plus hover looks exactly like focus. In view mode a click does nothing, so there's no hover style.
-- **One-step list.** The drag handle stays visible but disabled (`aria-disabled`, dimmed), so the layout matches a longer list and screen reader users can still find it and hear that it's unavailable. dnd-kit removes its listeners, so it can't be picked up. Cost: it's still a Tab stop, and dnd-kit's hidden instructions still say "press space to pick up".
-- **Empty list.** No empty `<ol>` (screen readers would announce "list, 0 items"). An info `Banner` says "This guide has no steps yet." In edit mode, right after deleting the last step, the Undo banner sits above it. There's no "Add step" button, because adding steps isn't part of this exercise.
+- **The "semantic utilities only" guardrail doesn't exist.** `colors` sits under `theme.extend`, so Tailwind's palette is still there: `bg-slate-800` compiles, and `Screenshot` uses raw `bg-black/10`. The radius scale is inconsistent too: `--radius-2xl` has no utility, while `rounded-4xl` is a hard-coded `2rem`.
+- **`--border-focus` fails contrast**: 2.09:1 on white at 67% opacity, which is under the WCAG 3:1 minimum. Made solid (3.18:1). The Figma's dark value fails too (2.39:1) and got the same fix.
+- **`Card type="linked"` can never take focus** (no `tabIndex`), and its focus cue is a border shift of 1.26:1.
+- **`Button` uses `font-semibold` (600), but `index.html` only loads 400, 500 and 700.**
+- **`cn` doesn't merge conflicting classes**, so `className` overrides on `ui/` components can silently lose to the base classes (that's why `Card`'s padding was changed in place).
+- **`dark:` variants followed the OS** while the tokens were light-only. They now follow the theme attribute.
+- **`StepCard`** was a clickable `div`, not focusable or announced, with real buttons nested inside it. The drag "button" was the text "drag", with no accessible name and no keyboard behavior.
+- **`App`**: the list wasn't a list, the step count wasn't announced, and delete lost focus.
 
-- **Drag and drop: the design preview, for every input.** The Figma shows a small mock step while dragging, but not where the step will land. We made the design the only drag behavior, for mouse, touch and keyboard:
-  - **Lift:** the grabbed card shrinks into the 252×156 mock step (`DragPreview` in dnd-kit's `DragOverlay`), which then follows the pointer or the arrow keys.
-  - **Drop target:** the card's slot becomes a 64px `Banner variant="drop"` ("Drop step here") that moves to wherever the step will land. dnd-kit picks up the slot's new height, so the other cards keep their 32px gaps.
-  - **Drop:** the preview slides into the slot's top-left corner while the card grows back out of the preview's size (a `clip-path` animation, so the text never stretches). Escape plays the same animation in place.
-  - **One model for every input:** keyboard users get the same preview and drop target, plus the screen reader announcements. An earlier version (in the git history) moved the real card and let reviewers switch between the two. Once lift and drop were animated, the design's version told the story better, so we removed the switch rather than maintain two code paths.
+## What belongs in Stylus vs. stays local
 
-- **Motion.** The Figma doesn't specify motion, and the brief only fixes the affordance fade. Every duration and curve comes from the motion tokens:
-  - **Affordances fade in** (edit-mode controls, the Undo banner): `--duration-fast` (120ms) on `--ease-standard`, as the brief specifies.
-  - **Steps moving out of the way** slide on `--duration-base` (200ms) with `--ease-standard`. It's a smooth, unbouncy move that reads as making room, not as the step itself moving. We replaced dnd-kit's default `250ms ease` with token-based Tailwind classes, so reduced motion can turn it off in CSS.
-  - **Lift and drop** use `--ease-entrance`, which starts fast and settles. When a card is picked up, it shrinks into the preview and its slot collapses to the 64px drop target, so the cards below glide up instead of jumping. When it's dropped, its slot grows back to full height (the cards below glide down) while the card is revealed out of the preview's size.
-  - **Hover** eases the card's border and shadow on the same 200ms `--ease-standard`.
-  - **Reduced motion** turns off every animation and transition. Reordering, editing and undo all still work, by pointer and by keyboard, and the screen reader announcements are unchanged.
-- **Locked steps.** The fixture locks step 1, and the brief only says a locked step "cannot move". We went further: **nothing crosses a locked step.** Locked steps split the list into sections, and a step can only move within its own section (`lib/reorderRange.ts`). The rule is applied in collision detection, so the drop target never appears across a lock, for pointer or keyboard, and again in `handleDragEnd` as a guard. The lock shows as a disabled control (`aria-disabled`, dimmed like the one-step grip), so it doesn't look as usable as a drag handle. It stays in the Tab order so keyboard and screen reader users can find it and hear why the step can't move.
-  - **Locked means "can't be reordered", nothing more.** That's how the starter's `Step` type defines it. A locked step can still be edited and deleted, and Undo brings it back at its old position, still locked.
-  - **The first step stays pinned.** The starter's data calls step 1 "the guide's entry point", pinned in place. If the locked first step is deleted, then on "Done editing" whichever step is now first takes over the lock. This happens at save rather than at delete, so Undo works normally, and the author can drag a different step to the top before saving.
-- **Tests.** The starter had no test runner. We added Vitest with React Testing Library (`src/App.test.tsx`), testing at the `App` level, the way a user would use it: view and edit mode, inline editing, keyboard reordering with its announcement, Escape, "Done editing" keeping the order, locked steps (first and middle), delete and undo with focus, and the empty and one-step lists. jsdom has no layout, so `src/test/setup.ts` gives the step cards and the drag preview a fake one; that's what lets dnd-kit's keyboard reordering run in tests. Pointer and touch dragging, and the animations, are checked by hand in a browser.
-- **Dark mode (the optional bonus).** A "Light / Dark" switch in the page footer. With no saved choice it follows the browser's `prefers-color-scheme`, including if that changes mid-session. Flipping it saves the choice in `localStorage`, and the saved choice wins after a refresh.
-  - **How it works:** one `:root[data-theme="dark"]` block in `index.css` redefines the color and shadow tokens. Components didn't change, because they only read tokens. A tiny script in `index.html` sets `data-theme` before first paint, so dark-mode users don't get a white flash. `ThemeToggle` handles changes after that.
-  - **Values:** taken from the Figma's dark mode where it has them. Tokens the Figma doesn't cover (our status colors, the primary button's hover shade and a few borders) are marked "not in the Figma" or "placeholder" in `index.css`. Every pairing was checked against WCAG: text at least 4.5:1, focus and borders at least 3:1.
-  - **Lift on dark:** as the brief warns, a shadow barely shows on a dark surface. With the Figma's value it's effectively invisible (the shadow's darkest pixel is within a few levels of the card). So lift doesn't depend on it: the drag preview's `--border-focus` outline is what makes it read as lifted, in both themes.
-  - **Tailwind `dark:` variants** now follow the same attribute (`darkMode: ['selector', '[data-theme="dark"]']`). Before, the starter's `Screenshot` switched on the OS setting even though the tokens were light-only.
-  - **Limits:** there's no way to go back to "follow the browser" once a choice is saved, short of clearing site data; a three-way Light / System / Dark control would fix that. And the placeholder screenshots stay pastel in dark mode, because the starter draws them with inline colors; real step screenshots are captured images and wouldn't follow the theme either.
+### New in Stylus (`src/ui/`, tokens in `index.css`):
+These UI elements were added assuming they *should* be design-system components. All components added were built in service of this demo; no Storybook stories or test coverage was added.
+- `NavigationTop`: the page's top bar.
+- `Breadcrumbs`: the location trail.
+- `IconButton`: a square, icon-only `Button`; `label` is required.
+- `IconLink`: a link that looks like an `IconButton`; `label` is required.
+- `Link`: a badge-style external link that always opens in a new tab.
+- `Banner`: info, success, error, warning, and drop, with a text message and an optional action button (not in the Figma). Only warning and drop variants are used in this demo, others are specced but not used.
+- `Switch`: an on/off setting, with optional side labels. Used for the theme toggle in the footer (not in the Figma).
+- The new tokens (see Tokens) and the `data-theme` dark-mode mechanism.
+
+### Changed in Stylus:
+- `Button`: added an `icon` size and an exported `buttonClassName()`, so links can look like buttons.
+- `Card`: padding from `px-6 py-5` to `p-4`, to match the Figma.
+
+### On top of dnd-kit:
+dnd-kit stays the engine (sensors, collision, measuring). Stylus would own the parts every sortable list should get right:
+- the drag handle (an `IconButton` with a per-item label, a disabled state and a lock state);
+- the drop placeholder (`Banner variant="drop"`);
+- announcement wording and keyboard instructions, written once and localized;
+- the lift, drop and slide motion, including reduced motion;
+- "locked" or "pinned" items as a list-level rule.
+
+### Local to the editor:
+`StepCard`, `StepList`, `DragPreview` (the mock step), `PageHeading`, `PageLayout`, `PageFooter`, `ThemeToggle`, edit-mode context, the draft and undo state in `App`, and `reorderRange` (until locking becomes a Stylus rule).
+
+## What I deliberately chose not to do
+
+- **A confirm dialog for delete**: Undo instead (see above).
+- **Auto-save on outside click**: cancel instead, so nothing changes by accident.
+- **A full undo history**: one level fits a draft that's committed on Done editing.
+- **"Add step"**: not part of the exercise.
+- **`tailwind-merge` for `cn`**: fixing `Card` in place was smaller and easier to explain. Stylus's real `cn` does merge.
+- **Two drag modes**: one model for every input (see above).
+- **Pointer and touch tests**: jsdom has no layout. Keyboard drag is tested through a fake layout; pointer, touch and motion were checked by hand.
+
+## What I'd do with more time
+
+- **Fix the 1px offset** between the drag handle and the step number. `Card`'s CSS border takes layout space and Figma's inside stroke doesn't; an inset-shadow outline (as in the header, `Link` and `Banner`) fixes it. 
+- **A 2px focus indicator on the inline fields**, for WCAG 2.2 AAA (2.4.13). They use a 1px border change today, which passes AA, but it's hard to see.
+- **Fade the edit controls out**, not only in.
+- **Light / System / Dark**, so a saved choice can go back to following the browser.
+- **Enforce the semantic-only palette.** Move `colors` out of `theme.extend` so Tailwind's raw palette stops compiling, then add the few base colors still needed (`transparent`, and replacements for `Screenshot`'s raw `black` and `white`) as tokens.
+- **Playwright tests** for pointer and touch dragging.
+- **Announce blocked moves** ("can't move past a locked step") instead of staying silent.
+- **Build ui/ components properly** with Storybook stories, test coverage and more flexible props; out of scope for this exercise.
 
 ## Design questions for the design team
 
-These are places where we think the design is wrong rather than just silent. We'd take them back to the designers before going further.
+- **The focus frame leaves out the drag handle.** This was called out in the instructions, but bears mention here. A card can only be focused in edit mode, where the handle is always shown, so I read this as a mistake and built "focus shows the same controls as hover".
+- **Edit controls only on hover** are inaccessible (see decisions). I'd confirm always-visible controls with design.
+- **The focus blue has a thin margin**: solid, it's 3.05:1 on the page background. A slightly darker blue would give room, but that's a brand color change.
+- **The card shadow is invisible on dark.** Lift currently relies on the outline; design may want a dark-specific elevation.
+- **What about the drop target?** There was a visual defined for how a card looked when dragging, but that assumes that we also need to handle the drop target. I made a design decision on this one for the project, but this would have been highlighted in a design review before engineering started.
 
-- **The focus frame leaves out the drag handle.** Every other edit-state frame shows the handle, but the focus frame doesn't. In our build, a card can only be focused or selected in edit mode, because view mode is read-only and nothing in it can be selected. In edit mode the handle is always there, so a focused card without one isn't a state that can happen. We read the frame as a mistake in the design. Following the prompt's rule, we built "focus shows the same controls as hover" rather than copying the frame.
-- **The edit controls only appear on hover.** In the design, the drag handle and the other controls appear when you hover a card. Hiding controls until hover is inaccessible: keyboard, screen reader and touch users never hover, so they can't find controls that only appear on hover. Hover also doesn't exist in view mode, where cards are read-only. We chose to show the drag, rename and delete controls on every card at all times in edit mode. All three are buttons, so they're in the Tab order and announced by screen readers. (A locked step has two: it shows a lock icon instead of a drag handle.) The cost is a busier edit view, which is one reason to confirm the choice with design.
+## Tokens
 
-## Known differences from the Figma
+### Added (not in the Figma):
+- `--width-content`: the 720px content column (Tailwind `max-w-content`).
+- `--border-info`: the `Link` badge stroke, so badges don't depend on the focus token.
+- Success, error and warning text, fill and border colors for `Banner`. Text is 6.9:1 or better and borders 3:1 or better, in both themes.
 
-- **The drag handle sits 1px higher than the step number.** The cause is how borders are measured. In Figma, a card's stroke is drawn inside the frame and takes up no layout space. In CSS, `Card`'s 1px `border` does take space, so everything inside the card moves down 1px compared with the design. This is a common gap between Figma and production code. The header already avoids it by using an inset shadow in place of a border. We haven't changed `Card` yet, because its hover, selected and drag states will probably change how it draws its edge, so we'll fix this when we build those states.
+### Changed:
+- `--border-focus`: made solid in light and dark (see the starter section).
 
-## Components added to `ui/`
-
-`src/ui/` is the design system (Stylus) layer. The components below weren't in the starter, and we added them there on the assumption that they belong in Stylus, not in the editor:
-
-- `IconButton`: a square, icon-only `Button`. `label` is required and becomes the `aria-label`.
-- `IconLink`: an `<a>` that looks like an `IconButton`, for navigation. `label` is required.
-- `NavigationTop`: the page's top bar with `left` and `right` slots. It renders a `<header>`.
-- `Breadcrumbs`: a `<nav aria-label="Breadcrumb">` containing an `<ol>`. The current page is bold with `aria-current="page"`, and the chevron separators are hidden from screen readers.
-- `Switch`: an on/off setting, built as a `<button role="switch" aria-checked>`. It has a visible label, or a pair of side labels ("Light" / "Dark") with the name given as `aria-label`. The track's edge is at least 3:1 against its surface whether the switch is on or off.
-- `Link`: an external link styled as a badge with an icon. It always opens in a new tab. `heading` and `body` variants.
-- `Banner`: a message in a card-shaped box, with an icon, a title and an optional action. Variants are `info`, `success`, `error` and `warning`, plus `drop`: a placeholder for drag and drop, white with a dashed border and centered text, with no icon because a drag preview usually covers the left edge. It's at least 48px tall, with 12px/24px padding. Long titles wrap, and the icon and action stay aligned with the first line. It isn't a live region itself; whatever renders it decides how the message gets announced.
-- `Button` was extended with an `icon` size and an exported `buttonClassName()`, so links can look like buttons without becoming buttons.
-- `Card` padding changed from `px-6 py-5` to `p-4` to match the Figma. Overriding it from `StepCard` with `className` doesn't work: the starter's `cn` doesn't merge conflicting classes, and Tailwind outputs `.p-4` before `.px-6`/`.py-5`, so the base padding always wins.
-
-## What we'd do with more time
-
-- **Make the focus indicator on the inline fields 2px.** While a step is being edited, a focused title or description field shows focus by turning its 1px border `--border-focus`. That matches the card and passes WCAG 2.2 AA, but it falls short of AAA's 2.4.13 Focus Appearance, which asks for an indicator at least 2px thick. Adding a 1px focus-colored shadow outside the border (`focus-visible:shadow-[0_0_0_1px_var(--border-focus)]`) would make it look like a 2px border without bringing back a floating outline.
-- **Fade the edit controls out, not just in.** The grip, edit and delete controls fade in over 120ms on `--ease-standard` when edit mode turns on, as the brief asks. On "Done editing" they disappear immediately. A fade-out would mean keeping them on the page for 120ms after edit mode ends, which needs extra state and timing code. It also matters less, because the user's attention is moving away from the controls at that point.
+### Dark:
+- A `:root[data-theme="dark"]` block in `index.css`.
+- Tokens the Figma's dark mode doesn't cover are marked "not in the Figma" or "placeholder".

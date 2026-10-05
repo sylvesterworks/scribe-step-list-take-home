@@ -44,7 +44,8 @@ const FIELD_CLASS =
   'focus-visible:border-focus focus-visible:outline-none';
 
 /**
- * The card as it exists today. It is not styled and it is not finished.
+ * This card is the foundation of the step process, with updates to support locked cards, 
+ * isEditing, and all of our action handler functions.
  */
 export function StepCard({
   step,

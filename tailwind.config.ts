@@ -1,9 +1,13 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * A trimmed version of the Stylus Tailwind config. Semantic utilities only —
- * the palette itself is deliberately not exposed, so `bg-slate-800` will not
- * work. Use the semantic tokens.
+ * A trimmed version of the Stylus Tailwind config. Use the semantic tokens.
+ *
+ * The intent is semantic utilities only, but it isn't enforced: `colors` sits
+ * under `theme.extend`, which keeps Tailwind's default palette, so
+ * `bg-slate-800` still compiles. Moving `colors` out of `extend` would enforce
+ * it, but also removes `transparent`, `black` and `white`, which `Button` and
+ * `Screenshot` use (see README, "What I'd do with more time").
  */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],

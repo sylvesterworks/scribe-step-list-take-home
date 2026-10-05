@@ -6,7 +6,7 @@ export type NumberProps = React.HTMLAttributes<HTMLSpanElement> & {
 };
 
 /**
- * Trimmed version of the Stylus Button. Same shape, same focus treatment.
+ * A simplified visual for the step number rendering the number within a properly sized circle.
  */
 export const StepNumber = forwardRef<HTMLSpanElement, NumberProps>(
   ({ className, ...props }, ref) => (
