@@ -91,6 +91,13 @@ dnd-kit stays the engine (sensors, collision, measuring). Stylus would own the p
 ### Local to the editor:
 `StepCard`, `StepList`, `DragPreview` (the mock step), `PageHeading`, `PageLayout`, `PageFooter`, `ThemeToggle`, edit-mode context, the draft and undo state in `App`, and `reorderRange` (until locking becomes a Stylus rule).
 
+## Tests
+
+The brief didn't ask for tests and the starter had no test runner. I added them anyway (`pnpm test`, Vitest with Testing Library) so the behavior is protected if code changes during the live session: a fix in one place that breaks reordering, locking or undo somewhere else shows up right away.
+
+- 21 tests at the `App` level, written the way a user works: view and edit mode, inline editing, keyboard reordering and its announcement, locked steps (first and middle), delete and undo with focus, the theme toggle, and the empty and one-step lists.
+- 3 unit tests for the locked-section rule (`reorderRange`).
+
 ## What I deliberately chose not to do
 
 - **A confirm dialog for delete**: Undo instead (see above).
