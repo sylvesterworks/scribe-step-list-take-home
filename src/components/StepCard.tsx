@@ -142,11 +142,26 @@ export function StepCard({
         // the drop target: hidden, with its slot shrunk to 64px; the dashed
         // banner below fills it. dnd-kit notices the new height and shifts
         // the other cards by 64px, so the 32px gaps hold during the drag.
-        isDragging && 'invisible max-h-16',
+        // `animate-slot-collapse` eases the slot down to that 64px.
+        isDragging && 'invisible max-h-16 animate-slot-collapse motion-reduce:animate-none',
         // Just dropped: grow out of the preview's size (tailwind.config.ts).
-        isJustDropped && 'animate-card-expand motion-reduce:animate-none',
+        // `overflow-hidden` keeps the full-height content inside the slot
+        // while the slot is still growing from 64px.
+        isJustDropped && 'animate-card-expand overflow-hidden motion-reduce:animate-none',
+        // Motion, all from tokens, off with reduced motion:
+        // - hover's border and shadow ease in and out;
+        // - while sorting, cards slide aside to make room. dnd-kit's
+        //   `transition` is truthy only when a card should animate its move
+        //   (it's null e.g. right after a drop, so cards don't slide twice),
+        //   so `transform` joins the transition only then.
+        transition
+          ? 'transition-[transform,border-color,box-shadow]'
+          : 'transition-[border-color,box-shadow]',
+        'duration-base ease-standard motion-reduce:transition-none',
       )}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      // Only the transform from dnd-kit inline; its timing comes from the
+      // classes above rather than dnd-kit's default `250ms ease`.
+      style={{ transform: CSS.Translate.toString(transform) }}
       onAnimationEnd={(e) => {
         // Only the card's own expand, not animations bubbling up from inside.
         if (e.target === e.currentTarget) onDropAnimationEnd();

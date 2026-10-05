@@ -86,8 +86,8 @@ export default {
         fast: 'var(--duration-fast)',
         base: 'var(--duration-base)',
       },
-      // Lift and drop. Each keyframe gives only a `from`, so the animation
-      // ends at the element's own styles.
+      // Lift and drop. A keyframe with only a `from` ends at the element's
+      // own styles; `card-expand` needs a `to` (see there).
       keyframes: {
         // Edit-mode controls (grip, edit, delete) fade in when they appear.
         'fade-in': {
@@ -98,11 +98,27 @@ export default {
         'preview-shrink': {
           from: { width: 'var(--drag-from-width)', height: 'var(--drag-from-height)' },
         },
-        // The dropped card starts clipped to the preview's 252x156 at its
-        // top-left corner and grows to full size. Clipping, not scaling, so
-        // the text never stretches.
+        // At lift, the grabbed card's slot collapses from the card's height
+        // (`--drag-card-height`, set on the list by App) to the 64px drop
+        // target, so the cards below glide up instead of jumping.
+        'slot-collapse': {
+          from: { maxHeight: 'var(--drag-card-height)' },
+        },
+        // On drop, the reverse: the slot grows from 64px back to the card's
+        // height, so the cards below glide down. At the same time the card
+        // is revealed from the preview's 252x156 at its top-left corner
+        // (clipping, not scaling, so the text never stretches).
+        // Both need an explicit `to`: the card's own values are `none`, and
+        // neither max-height nor clip-path can animate to `none`.
         'card-expand': {
-          from: { clipPath: 'inset(0 calc(100% - 252px) calc(100% - 156px) 0 round 0.75rem)' },
+          from: {
+            maxHeight: '4rem',
+            clipPath: 'inset(0 calc(100% - 252px) calc(100% - 156px) 0 round 0.75rem)',
+          },
+          to: {
+            maxHeight: 'var(--drag-card-height)',
+            clipPath: 'inset(0 0 0 0 round 0.75rem)',
+          },
         },
       },
       animation: {
@@ -110,6 +126,7 @@ export default {
         'fade-in': 'fade-in var(--duration-fast) var(--ease-standard)',
         'preview-shrink': 'preview-shrink var(--duration-base) var(--ease-entrance)',
         'card-expand': 'card-expand var(--duration-base) var(--ease-entrance)',
+        'slot-collapse': 'slot-collapse var(--duration-base) var(--ease-entrance)',
       },
     },
   },

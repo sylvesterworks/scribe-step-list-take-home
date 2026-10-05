@@ -74,6 +74,13 @@ Your task is in the brief you were sent, not in this file.
   - **Drop:** the preview slides into the slot's top-left corner while the card grows back out of the preview's size (a `clip-path` animation, so the text never stretches). Escape plays the same animation in place.
   - **One model for every input:** keyboard users get the same preview and drop target, plus the screen reader announcements. An earlier version (in the git history) moved the real card and let reviewers switch between the two. Once lift and drop were animated, the design's version told the story better, so we removed the switch rather than maintain two code paths.
 
+- **Motion.** The Figma doesn't specify motion, and the brief only fixes the affordance fade. Every duration and curve comes from the motion tokens:
+  - **Affordances fade in** (edit-mode controls, the Undo banner): `--duration-fast` (120ms) on `--ease-standard`, as the brief specifies.
+  - **Steps moving out of the way** slide on `--duration-base` (200ms) with `--ease-standard`. It's a smooth, unbouncy move that reads as making room, not as the step itself moving. We replaced dnd-kit's default `250ms ease` with token-based Tailwind classes, so reduced motion can turn it off in CSS.
+  - **Lift and drop** use `--ease-entrance`, which starts fast and settles. When a card is picked up, it shrinks into the preview and its slot collapses to the 64px drop target, so the cards below glide up instead of jumping. When it's dropped, its slot grows back to full height (the cards below glide down) while the card is revealed out of the preview's size.
+  - **Hover** eases the card's border and shadow on the same 200ms `--ease-standard`.
+  - **Reduced motion** turns off every animation and transition. Reordering, editing and undo all still work, by pointer and by keyboard, and the screen reader announcements are unchanged.
+
 ## Design questions for the design team
 
 These are places where we think the design is wrong rather than just silent. We'd take them back to the designers before going further.
@@ -102,3 +109,4 @@ These are places where we think the design is wrong rather than just silent. We'
 
 - **Make the focus indicator on the inline fields 2px.** While a step is being edited, a focused title or description field shows focus by turning its 1px border `--border-focus`. That matches the card and passes WCAG 2.2 AA, but it falls short of AAA's 2.4.13 Focus Appearance, which asks for an indicator at least 2px thick. Adding a 1px focus-colored shadow outside the border (`focus-visible:shadow-[0_0_0_1px_var(--border-focus)]`) would make it look like a 2px border without bringing back a floating outline.
 - **Fade the edit controls out, not just in.** The grip, edit and delete controls fade in over 120ms on `--ease-standard` when edit mode turns on, as the brief asks. On "Done editing" they disappear immediately. A fade-out would mean keeping them on the page for 120ms after edit mode ends, which needs extra state and timing code. It also matters less, because the user's attention is moving away from the controls at that point.
+- **A locked step in the middle of the list.** The fixture only locks step 1, and our rule handles that: a locked step can't be picked up or dropped onto, so nothing ever gets in front of it. A locked step further down would still shift by one place when another step is dragged across it, because reordering moves every step between the start and end positions. The fix would be "nothing crosses a locked step": refuse any drop where a locked step sits between the start and the end. The brief doesn't require it, so we left it out.

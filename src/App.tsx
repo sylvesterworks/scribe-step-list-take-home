@@ -68,9 +68,14 @@ export default function App() {
     width: number;
     height: number;
   } | null>(null);
-  // The step that was just dropped. Its card plays the expand animation (the
-  // "drop"), then clears this.
-  const [justDroppedId, setJustDroppedId] = useState<UniqueIdentifier | null>(null);
+  // The step that was just dropped, and its card's height. The card plays the
+  // expand animation (the "drop"), growing its slot back to that height, then
+  // clears this.
+  const [justDropped, setJustDropped] = useState<{ id: UniqueIdentifier; height: number } | null>(
+    null,
+  );
+  // The dragged or just-dropped card's height, for the slot animations.
+  const dragCardHeight = activeDrag?.height ?? justDropped?.height;
 
   const steps = isEditing ? draftSteps : savedSteps;
 
@@ -148,7 +153,7 @@ export default function App() {
   // animationend to clear it), so don't set it.
   function endDrag(id: UniqueIdentifier) {
     setActiveDrag(null);
-    if (!prefersReducedMotion) setJustDroppedId(id);
+    if (!prefersReducedMotion && activeDrag) setJustDropped({ id, height: activeDrag.height });
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
@@ -219,6 +224,8 @@ export default function App() {
   const undoBanner = lastDeleted && (
     <Banner
       variant="warning"
+      // Fades in like the edit-mode controls.
+      className="animate-fade-in motion-reduce:animate-none"
       title={`Deleted step with title "${lastDeleted.step.title}".`}
       action={
         <Button size="small" data-id="undo-delete" onClick={undoDelete}>
@@ -281,7 +288,15 @@ export default function App() {
             accessibility={{ announcements }}
           >
             <SortableContext items={steps} strategy={verticalListSortingStrategy}>
-              <StepList>
+              <StepList
+                // The dragged or dropped card's height, read by the slot
+                // animations (inherited by every card; only that one uses it).
+                style={
+                  dragCardHeight
+                    ? ({ '--drag-card-height': `${dragCardHeight}px` } as React.CSSProperties)
+                    : undefined
+                }
+              >
                 {steps.map((step, i) => (
                   // The Undo banner sits where the deleted step was: above the
                   // step that took its place, or below the last step if the
@@ -294,8 +309,8 @@ export default function App() {
                       step={step}
                       index={i}
                       canReorder={steps.length > 1}
-                      isJustDropped={step.id === justDroppedId}
-                      onDropAnimationEnd={() => setJustDroppedId(null)}
+                      isJustDropped={step.id === justDropped?.id}
+                      onDropAnimationEnd={() => setJustDropped(null)}
                       isEditingStep={step.id === editingStepId}
                       onEdit={setEditingStepId}
                       onSave={saveStep}
