@@ -165,7 +165,7 @@ export function StepCard({
         // the button centered in it so it lines up with the step number.
         // stopPropagation here covers the button and the empty box around it.
         <div
-          className="absolute right-full top-0 flex h-[72px] w-[60px] items-center justify-center"
+          className="absolute right-full top-0 flex h-[72px] w-[60px] animate-fade-in items-center justify-center motion-reduce:animate-none"
           onClick={(e) => e.stopPropagation()}
         >
           {step.locked ? (
@@ -204,7 +204,8 @@ export function StepCard({
           )}
           {isEditing && (
             // `ml-auto` takes up the free space, pushing the buttons right.
-            <div className="ml-auto flex gap-1">
+            // Like the grip box, this fades in when edit mode mounts it.
+            <div className="ml-auto flex animate-fade-in gap-1 motion-reduce:animate-none">
               {/* One button that switches between Edit and Save, so keyboard
                   focus stays on it when the fields open and close. */}
               <IconButton

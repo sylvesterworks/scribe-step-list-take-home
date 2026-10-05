@@ -89,6 +89,10 @@ export default {
       // Lift and drop. Each keyframe gives only a `from`, so the animation
       // ends at the element's own styles.
       keyframes: {
+        // Edit-mode controls (grip, edit, delete) fade in when they appear.
+        'fade-in': {
+          from: { opacity: '0' },
+        },
         // The drag preview starts at the grabbed card's size (CSS variables
         // set by DragPreview) and shrinks to its own 252x156.
         'preview-shrink': {
@@ -102,6 +106,8 @@ export default {
         },
       },
       animation: {
+        // The brief: affordances fade in over 120ms on --ease-standard.
+        'fade-in': 'fade-in var(--duration-fast) var(--ease-standard)',
         'preview-shrink': 'preview-shrink var(--duration-base) var(--ease-entrance)',
         'card-expand': 'card-expand var(--duration-base) var(--ease-entrance)',
       },
